@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Entrar — OQ lembra" },
       { name: "description", content: "Acesse o OQ lembra e continue suas revisões." },
       { property: "og:title", content: "Entrar — OQ lembra" },

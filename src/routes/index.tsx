@@ -6,6 +6,8 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "OQ lembra — Active Recall para Medicina" },
       { name: "description", content: "Revise com active recall: notas mascaradas que se revelam quando você lembra." },
       { property: "og:title", content: "OQ lembra — Active Recall" },

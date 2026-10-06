@@ -33,6 +33,11 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-local-surface: var(--local-surface);
+  --color-local-border: var(--local-border);
+  --color-search-surface: var(--search-surface);
+  --color-search-border: var(--search-border);
+  --color-search-accent: var(--search-accent);
   --color-navy: var(--navy);
   --color-navy-foreground: var(--navy-foreground);
   --color-success: var(--success);
@@ -67,6 +72,11 @@
 }
 
 :root {
+  --local-surface: oklch(0.97 0.014 254 / 50%);
+  --local-border: oklch(0.882 0.059 254);
+  --search-surface: oklch(0.977 0.014 308 / 50%);
+  --search-border: oklch(0.902 0.063 306);
+  --search-accent: oklch(0.558 0.288 303);
   --radius: 1rem;
   --background: oklch(0.984 0.003 247.858);
   --foreground: oklch(0.129 0.042 264.695);
@@ -107,6 +117,11 @@
 }
 
 .dark {
+  --local-surface: oklch(0.28 0.04 254 / 50%);
+  --local-border: oklch(0.45 0.08 254);
+  --search-surface: oklch(0.28 0.04 308 / 50%);
+  --search-border: oklch(0.45 0.08 306);
+  --search-accent: oklch(0.75 0.16 303);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

@@ -11,6 +11,8 @@ import { useLembretes, useAddErros, revelarTrechos, type Lembrete, type Trecho }
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Revisar — OQ lembra" },
       { name: "description", content: "Modo estudo com active recall: digite o que lembra e revele a nota." },
       { property: "og:title", content: "Revisar — OQ lembra" },

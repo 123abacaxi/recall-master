@@ -42,8 +42,9 @@ export function useAddLembrete() {
   return useMutation({
     mutationFn: async (l: Omit<Lembrete, "id">) => {
       const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Entre novamente para salvar seu lembrete.");
       const { error } = await supabase.from("lembretes").insert({
-        user_id: u.user!.id,
+        user_id: u.user.id,
         titulo: l.titulo.trim().slice(0, 200),
         materia: l.materia.trim().slice(0, 100),
         trechos: l.trechos.map(({ id, texto_original, keywords }) => ({ id, texto_original, keywords })),
