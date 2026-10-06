@@ -1,5 +1,15 @@
 export type Trecho = { id: string; texto_original: string; keywords: string[]; revelado: boolean };
 
+export type RecallState = { trechos: Trecho[]; hintsUsed: number };
+
+export function revelarComDica(state: RecallState, id: string): RecallState {
+  if (!state.trechos.some((trecho) => trecho.id === id && !trecho.revelado)) return state;
+  return {
+    hintsUsed: state.hintsUsed + 1,
+    trechos: state.trechos.map((trecho) => trecho.id === id ? { ...trecho, revelado: true } : trecho),
+  };
+}
+
 /** Lowercase, strip accents and punctuation, collapse whitespace. */
 export function sanitizeText(text: string): string {
   return text

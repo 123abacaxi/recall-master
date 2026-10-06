@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Mic, Flag } from "lucide-react";
+import { ArrowLeft, ChevronRight, Mic, Flag, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
 import { useLembretes, useAddErros, revelarTrechos, type Lembrete, type Trecho } from "@/lib/store";
+import { revelarComDica } from "@/lib/recall";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
@@ -58,7 +59,11 @@ function Revisar() {
 }
 
 function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () => void }) {
-  const [trechos, setTrechos] = useState<Trecho[]>(() => lembrete.trechos.map((t) => ({ ...t, revelado: false })));
+  const [study, setStudy] = useState(() => ({
+    trechos: lembrete.trechos.map((t) => ({ ...t, revelado: false })),
+    hintsUsed: 0,
+  }));
+  const { trechos, hintsUsed } = study;
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
@@ -67,10 +72,10 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
 
   const handle = (v: string) => {
     setTexto(v);
-    setTrechos((prev) => {
-      const next = revelarTrechos(prev, v);
-      if (next.some((b, i) => b.revelado && !prev[i]?.revelado)) setTimeout(() => setTexto(""), 400);
-      return next;
+    setStudy((prev) => {
+      const next = revelarTrechos(prev.trechos, v);
+      if (next.some((b, i) => b.revelado && !prev.trechos[i]?.revelado)) setTimeout(() => setTexto(""), 400);
+      return { ...prev, trechos: next };
     });
   };
 
@@ -93,7 +98,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
     const faltou = trechos.filter((b) => !b.revelado);
     if (faltou.length) addErros.mutate({ lembrete, trechos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
     toast.success(faltou.length ? `${faltou.length} trecho(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
-    setTrechos((p) => p.map((b) => ({ ...b, revelado: true })));
+    setStudy((prev) => ({ ...prev, trechos: prev.trechos.map((b) => ({ ...b, revelado: true })) }));
   };
 
   return (
@@ -112,15 +117,28 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
         </div>
 
         <article className="mt-6 rounded-2xl bg-card p-8 text-lg leading-relaxed text-navy shadow-sm md:p-10">
-          {trechos.map((t) => (
+          {trechos.map((t, index) => (
+            <Fragment key={t.id}>
             <span
-              key={t.id}
               className={t.revelado ? "rounded-md transition-all duration-700" : "rounded-md bg-muted/50 text-transparent blur-[5px] select-none transition-all duration-700"}
             >
               {t.texto_original.split("\n").map((linha, i) => (
                 <Fragment key={i}>{i > 0 && <br />}{linha}</Fragment>
               ))}
             </span>
+            {!t.revelado && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Revelar trecho ${index + 1}`}
+                title={`Revelar trecho ${index + 1}`}
+                onClick={() => setStudy((prev) => revelarComDica(prev, t.id))}
+                className="mx-1 inline-flex h-7 w-7 align-middle rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary"
+              >
+                <Eye className="h-4 w-4" strokeWidth={1.75} />
+              </Button>
+            )}
+            </Fragment>
           ))}
         </article>
         {revelados < trechos.length && (
