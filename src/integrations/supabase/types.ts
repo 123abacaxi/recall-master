@@ -49,29 +49,29 @@ export type Database = {
       }
       lembretes: {
         Row: {
-          blocos: Json
           created_at: string
           id: string
           materia: string
           titulo: string
+          trechos: Json
           updated_at: string
           user_id: string | null
         }
         Insert: {
-          blocos?: Json
           created_at?: string
           id?: string
           materia: string
           titulo: string
+          trechos?: Json
           updated_at?: string
           user_id?: string | null
         }
         Update: {
-          blocos?: Json
           created_at?: string
           id?: string
           materia?: string
           titulo?: string
+          trechos?: Json
           updated_at?: string
           user_id?: string | null
         }
