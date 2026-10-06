@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Brain, PenLine, BookX, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { to: "/revisar", label: "Revisar", icon: Brain },
@@ -40,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <Link to="/login" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-navy-foreground/60 hover:bg-navy-foreground/10">
+        <Link to="/login" onClick={() => { void supabase.auth.signOut(); }} className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-navy-foreground/60 hover:bg-navy-foreground/10">
           <LogOut className="h-5 w-5" strokeWidth={1.75} />
           <span className="hidden md:inline">Sair</span>
         </Link>
