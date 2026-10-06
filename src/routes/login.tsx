@@ -1,8 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Lock, User } from "lucide-react";
+import { useState } from "react";
+import { Lock, Mail } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -16,26 +20,53 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
+const schema = z.object({
+  email: z.string().trim().email("E-mail inválido").max(255),
+  senha: z.string().min(6, "A senha precisa de pelo menos 6 caracteres").max(72),
+});
+
 function Login() {
   const nav = useNavigate();
+  const [modo, setModo] = useState<"entrar" | "cadastrar">("entrar");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = schema.safeParse({ email, senha });
+    if (!p.success) return toast.error(p.error.issues[0]?.message);
+    setLoading(true);
+    const { data, error } =
+      modo === "entrar"
+        ? await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.senha })
+        : await supabase.auth.signUp({ email: p.data.email, password: p.data.senha, options: { emailRedirectTo: `${window.location.origin}/revisar` } });
+    setLoading(false);
+    if (error) return toast.error(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
+    if (!data.session) return toast.success("Conta criada! Confirme pelo link enviado ao seu e-mail.");
+    nav({ to: "/revisar" });
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <form
-        onSubmit={(e) => { e.preventDefault(); nav({ to: "/revisar" }); }}
-        className="w-full max-w-sm space-y-6 rounded-2xl border bg-card p-8 shadow-sm"
-      >
+      <form onSubmit={submit} className="w-full max-w-sm space-y-6 rounded-2xl border bg-card p-8 shadow-sm">
         <div className="flex justify-center"><Logo /></div>
         <div className="space-y-3">
           <div className="relative">
-            <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
-            <Input placeholder="Usuário" className="h-12 rounded-2xl pl-11 shadow-sm" />
+            <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" className="h-12 rounded-2xl pl-11 shadow-sm" />
           </div>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
-            <Input type="password" placeholder="Senha" className="h-12 rounded-2xl pl-11 shadow-sm" />
+            <Input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha" className="h-12 rounded-2xl pl-11 shadow-sm" />
           </div>
         </div>
-        <Button type="submit" className="h-12 w-full rounded-2xl text-base font-bold shadow-sm">Entrar</Button>
+        <Button type="submit" disabled={loading} className="h-12 w-full rounded-2xl text-base font-bold shadow-sm">
+          {loading ? "Aguarde..." : modo === "entrar" ? "Entrar" : "Criar conta"}
+        </Button>
+        <button type="button" onClick={() => setModo(modo === "entrar" ? "cadastrar" : "entrar")} className="w-full text-sm font-semibold text-primary">
+          {modo === "entrar" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+        </button>
       </form>
     </div>
   );

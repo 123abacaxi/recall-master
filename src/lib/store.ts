@@ -1,77 +1,78 @@
-import { useSyncExternalStore } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Bloco } from "./recall";
 
-export type Bloco = { texto: string; keywords: string[]; dica: string; revelado: boolean };
+export { revelarBlocos, sanitizeText, type Bloco } from "./recall";
+
 export type Lembrete = { id: string; titulo: string; materia: string; blocos: Bloco[] };
 export type Erro = { id: string; lembrete: string; materia: string; texto: string; dica: string };
 
-/** Reveals hidden blocks whose keyword appears in the typed text (case/accent-insensitive). */
-export function revelarBlocos(blocos: Bloco[], digitado: string): Bloco[] {
-  const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const t = norm(digitado);
-  if (!t.trim()) return blocos;
-  return blocos.map((b) =>
-    b.revelado || !b.keywords.some((k) => t.includes(norm(k))) ? b : { ...b, revelado: true },
-  );
+const toBlocos = (raw: unknown): Bloco[] =>
+  (Array.isArray(raw) ? raw : []).map((b: any) => ({
+    texto: String(b.texto ?? ""),
+    keywords: Array.isArray(b.keywords) ? b.keywords.map(String) : [],
+    dica: String(b.dica ?? ""),
+    revelado: false,
+  }));
+
+export function useLembretes() {
+  return useQuery({
+    queryKey: ["lembretes"],
+    queryFn: async (): Promise<Lembrete[]> => {
+      const { data, error } = await supabase.from("lembretes").select("id,titulo,materia,blocos").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data.map((l) => ({ ...l, blocos: toBlocos(l.blocos) }));
+    },
+  });
 }
 
-const b = (texto: string, keywords: string[], dica: string): Bloco => ({ texto, keywords, dica, revelado: false });
-
-let lembretes: Lembrete[] = [
-  {
-    id: "1",
-    titulo: "Insuficiência Cardíaca",
-    materia: "Cardiologia",
-    blocos: [
-      b("Principal causa: doença arterial coronariana", ["coronariana", "coronária"], "Pense nas artérias do coração"),
-      b("Classificação funcional pela NYHA (I a IV)", ["NYHA"], "Sigla de uma associação de Nova York"),
-      b("BNP elevado sugere disfunção ventricular", ["BNP"], "Peptídeo natriurético"),
-      b("Tratamento base: IECA + betabloqueador", ["IECA", "betabloqueador"], "Duas classes que reduzem mortalidade"),
-    ],
-  },
-  {
-    id: "2",
-    titulo: "Diabetes Mellitus tipo 2",
-    materia: "Endocrinologia",
-    blocos: [
-      b("Diagnóstico: glicemia de jejum ≥ 126 mg/dL", ["126"], "Número entre 120 e 130"),
-      b("HbA1c ≥ 6,5% confirma o diagnóstico", ["6,5", "hemoglobina glicada"], "Seis e meio"),
-      b("Primeira linha: metformina", ["metformina"], "Biguanida"),
-    ],
-  },
-  {
-    id: "3",
-    titulo: "Pneumonia Comunitária",
-    materia: "Pneumologia",
-    blocos: [
-      b("Agente mais comum: Streptococcus pneumoniae", ["pneumoniae", "pneumococo"], "Diplococo gram-positivo"),
-      b("Escore de gravidade: CURB-65", ["CURB"], "Confusão, Ureia, Respiração..."),
-    ],
-  },
-];
-
-let erros: Erro[] = [
-  { id: "e1", lembrete: "Insuficiência Cardíaca", materia: "Cardiologia", texto: "BNP elevado sugere disfunção ventricular", dica: "Peptídeo natriurético" },
-];
-
-const listeners = new Set<() => void>();
-const emit = () => listeners.forEach((l) => l());
-const subscribe = (l: () => void) => (listeners.add(l), () => listeners.delete(l));
-
-export const useLembretes = () => useSyncExternalStore(subscribe, () => lembretes, () => lembretes);
-export const useErros = () => useSyncExternalStore(subscribe, () => erros, () => erros);
-
-export function addLembrete(l: Omit<Lembrete, "id">) {
-  lembretes = [{ ...l, id: crypto.randomUUID() }, ...lembretes];
-  emit();
+export function useErros() {
+  return useQuery({
+    queryKey: ["erros"],
+    queryFn: async (): Promise<Erro[]> => {
+      const { data, error } = await supabase.from("erros").select("id,lembrete,materia,texto,dica").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
 }
-export function addErros(lem: Lembrete, blocos: Bloco[]) {
-  const novos = blocos
-    .filter((x) => !erros.some((e) => e.texto === x.texto))
-    .map((x) => ({ id: crypto.randomUUID(), lembrete: lem.titulo, materia: lem.materia, texto: x.texto, dica: x.dica }));
-  erros = [...novos, ...erros];
-  emit();
+
+export function useAddLembrete() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (l: Omit<Lembrete, "id">) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.from("lembretes").insert({
+        user_id: u.user!.id,
+        titulo: l.titulo.trim().slice(0, 200),
+        materia: l.materia.trim().slice(0, 100),
+        blocos: l.blocos.map(({ texto, keywords, dica }) => ({ texto, keywords, dica })),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["lembretes"] }),
+  });
 }
-export function removeErro(id: string) {
-  erros = erros.filter((e) => e.id !== id);
-  emit();
+
+export function useAddErros() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ lembrete, blocos }: { lembrete: Lembrete; blocos: Bloco[] }) => {
+      const rows = blocos.map((b) => ({ lembrete: lembrete.titulo, materia: lembrete.materia, texto: b.texto, dica: b.dica }));
+      const { error } = await supabase.from("erros").upsert(rows, { onConflict: "user_id,texto", ignoreDuplicates: true });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
+  });
+}
+
+export function useRemoveErro() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("erros").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
+  });
 }
