@@ -1,4 +1,6 @@
 # Tela Criar
+- [ ] Auto-SRS: cálculo, telemetria, agenda individual persistente e conclusão automática.
+- [ ] Testar Auto-SRS e verificar conclusão; gravação real depende de sessão externa disponível.
 - [x] Revisar: olho por trecho oculto e contador interno hintsUsed; clique e revelação por texto validados em testes.
 - [x] Adicionar modo e formato ao payload mockado.
 - [x] Exibir rascunhos editáveis com aprovação e exclusão antes de Revisar.
