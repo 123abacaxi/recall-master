@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Lightbulb, Mic, CheckCircle2, Flag } from "lucide-react";
+import { Fragment, useRef, useState } from "react";
+import { ArrowLeft, ChevronRight, Mic, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/AppShell";
-import { useLembretes, useAddErros, revelarBlocos, type Lembrete, type Bloco } from "@/lib/store";
+import { useLembretes, useAddErros, revelarTrechos, type Lembrete, type Trecho } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
@@ -44,7 +43,7 @@ function Revisar() {
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
                 <h2 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h2>
                 <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{l.blocos.length} tópicos</span>
+                  <span>{l.trechos.length} tópicos</span>
                   <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
                 </div>
               </button>
@@ -57,17 +56,17 @@ function Revisar() {
 }
 
 function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () => void }) {
-  const [blocos, setBlocos] = useState<Bloco[]>(() => lembrete.blocos.map((b) => ({ ...b, revelado: false })));
+  const [trechos, setTrechos] = useState<Trecho[]>(() => lembrete.trechos.map((t) => ({ ...t, revelado: false })));
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
   const addErros = useAddErros();
-  const revelados = blocos.filter((b) => b.revelado).length;
+  const revelados = trechos.filter((b) => b.revelado).length;
 
   const handle = (v: string) => {
     setTexto(v);
-    setBlocos((prev) => {
-      const next = revelarBlocos(prev, v);
+    setTrechos((prev) => {
+      const next = revelarTrechos(prev, v);
       if (next.some((b, i) => b.revelado && !prev[i]?.revelado)) setTimeout(() => setTexto(""), 400);
       return next;
     });
@@ -89,14 +88,14 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
   };
 
   const finalizar = () => {
-    const faltou = blocos.filter((b) => !b.revelado);
-    if (faltou.length) addErros.mutate({ lembrete, blocos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
-    toast.success(faltou.length ? `${faltou.length} tópico(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
-    setBlocos((p) => p.map((b) => ({ ...b, revelado: true })));
+    const faltou = trechos.filter((b) => !b.revelado);
+    if (faltou.length) addErros.mutate({ lembrete, trechos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
+    toast.success(faltou.length ? `${faltou.length} trecho(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
+    setTrechos((p) => p.map((b) => ({ ...b, revelado: true })));
   };
 
   return (
-    <TooltipProvider delayDuration={100}>
+    <>
       <div className="pb-32">
         <button onClick={onVoltar} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-navy">
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Voltar
@@ -105,36 +104,24 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{lembrete.materia}</span>
           <h1 className="mt-3 text-2xl font-extrabold">{lembrete.titulo}</h1>
           <div className="mt-4 flex items-center gap-3 text-sm">
-            <Progress value={(revelados / blocos.length) * 100} className="h-2 rounded-full bg-navy-foreground/20" />
-            <span className="shrink-0 font-semibold">{revelados}/{blocos.length}</span>
+            <Progress value={(revelados / trechos.length) * 100} className="h-2 rounded-full bg-navy-foreground/20" />
+            <span className="shrink-0 font-semibold">{revelados}/{trechos.length}</span>
           </div>
         </div>
 
-        <ul className="mt-6 space-y-3">
-          {blocos.map((b) => (
-            <li key={b.texto} className={`flex items-center gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 transition-all duration-500 ${b.revelado ? "ring-success/40" : "ring-transparent"}`}>
-              {b.revelado ? (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-success" strokeWidth={1.75} />
-              ) : (
-                <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-              )}
-              <p className={`flex-1 font-semibold text-navy ${b.revelado ? "" : "blur-sm opacity-80 select-none transition-all duration-500"} transition-all duration-500`}>
-                {b.texto}
-              </p>
-              {!b.revelado && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="rounded-2xl p-2 text-muted-foreground hover:bg-muted hover:text-primary" aria-label="Ver dica">
-                      <Lightbulb className="h-5 w-5" strokeWidth={1.75} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="rounded-2xl">💡 {b.dica}</TooltipContent>
-                </Tooltip>
-              )}
-            </li>
+        <article className="mt-6 rounded-2xl bg-card p-8 text-lg leading-relaxed text-navy shadow-sm md:p-10">
+          {trechos.map((t) => (
+            <span
+              key={t.id}
+              className={t.revelado ? "rounded-md transition-all duration-700" : "rounded-md bg-muted/50 text-transparent blur-[5px] select-none transition-all duration-700"}
+            >
+              {t.texto_original.split("\n").map((linha, i) => (
+                <Fragment key={i}>{i > 0 && <br />}{linha}</Fragment>
+              ))}
+            </span>
           ))}
-        </ul>
-        {revelados < blocos.length && (
+        </article>
+        {revelados < trechos.length && (
           <Button variant="ghost" onClick={finalizar} className="mt-4 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive">
             <Flag strokeWidth={1.75} /> Desistir e enviar ao Caderno de Erros
           </Button>
@@ -157,6 +144,6 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
           </div>
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 }
