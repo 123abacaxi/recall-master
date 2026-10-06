@@ -1,17 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Bloco } from "./recall";
+import type { Trecho } from "./recall";
 
-export { revelarBlocos, sanitizeText, type Bloco } from "./recall";
+export { revelarTrechos, sanitizeText, type Trecho } from "./recall";
 
-export type Lembrete = { id: string; titulo: string; materia: string; blocos: Bloco[] };
+export type Lembrete = { id: string; titulo: string; materia: string; trechos: Trecho[] };
 export type Erro = { id: string; lembrete: string; materia: string; texto: string; dica: string };
 
-const toBlocos = (raw: unknown): Bloco[] =>
-  (Array.isArray(raw) ? raw : []).map((b: any) => ({
-    texto: String(b.texto ?? ""),
-    keywords: Array.isArray(b.keywords) ? b.keywords.map(String) : [],
-    dica: String(b.dica ?? ""),
+const toTrechos = (raw: unknown): Trecho[] =>
+  (Array.isArray(raw) ? raw : []).map((t: any, i: number) => ({
+    id: String(t.id ?? i),
+    texto_original: String(t.texto_original ?? ""),
+    keywords: Array.isArray(t.keywords) ? t.keywords.map(String) : [],
     revelado: false,
   }));
 
@@ -19,9 +19,9 @@ export function useLembretes() {
   return useQuery({
     queryKey: ["lembretes"],
     queryFn: async (): Promise<Lembrete[]> => {
-      const { data, error } = await supabase.from("lembretes").select("id,titulo,materia,blocos").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("lembretes").select("id,titulo,materia,trechos").order("created_at", { ascending: false });
       if (error) throw error;
-      return data.map((l) => ({ ...l, blocos: toBlocos(l.blocos) }));
+      return data.map((l) => ({ ...l, trechos: toTrechos(l.trechos) }));
     },
   });
 }
@@ -46,7 +46,7 @@ export function useAddLembrete() {
         user_id: u.user!.id,
         titulo: l.titulo.trim().slice(0, 200),
         materia: l.materia.trim().slice(0, 100),
-        blocos: l.blocos.map(({ texto, keywords, dica }) => ({ texto, keywords, dica })),
+        trechos: l.trechos.map(({ id, texto_original, keywords }) => ({ id, texto_original, keywords })),
       });
       if (error) throw error;
     },
@@ -57,8 +57,8 @@ export function useAddLembrete() {
 export function useAddErros() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ lembrete, blocos }: { lembrete: Lembrete; blocos: Bloco[] }) => {
-      const rows = blocos.map((b) => ({ lembrete: lembrete.titulo, materia: lembrete.materia, texto: b.texto, dica: b.dica }));
+    mutationFn: async ({ lembrete, trechos }: { lembrete: Lembrete; trechos: Trecho[] }) => {
+      const rows = trechos.map((t) => ({ lembrete: lembrete.titulo, materia: lembrete.materia, texto: t.texto_original.trim(), dica: t.keywords.join(", ") }));
       const { error } = await supabase.from("erros").upsert(rows, { onConflict: "user_id,texto", ignoreDuplicates: true });
       if (error) throw error;
     },
