@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep mock generation and grouping in a browser-safe pure module so payload and note-size rules can be tested independently.
+- Keep generated notes as page-local drafts and insert into existing reminders only on approval so unapproved content never reaches review.
