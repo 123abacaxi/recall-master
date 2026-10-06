@@ -11,3 +11,6 @@
 
 - Keep mock generation and grouping in a browser-safe pure module so payload and note-size rules can be tested independently.
 - Keep generated notes as page-local drafts and insert into existing reminders only on approval so unapproved content never reaches review.
+- Store review schedules per user and reminder, separate from shared example content, so learners never overwrite each other's progress.
+- Save completed review sessions through an authenticated server function and an atomic idempotent SQL operation so retries cannot advance repetitions twice.
+- Keep fluency scoring and SM-2 calculations in a pure module; automatic scores are heuristic, not validated neuroscience or an AI model response.

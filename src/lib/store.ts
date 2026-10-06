@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Trecho } from "./recall";
+import { useServerFn } from "@tanstack/react-start";
+import { saveReview } from "./reviews.functions";
+import { INITIAL_SRS, type SrsState } from "./srs";
 
 export { revelarTrechos, sanitizeText, type Trecho } from "./recall";
 
-export type Lembrete = { id: string; titulo: string; materia: string; trechos: Trecho[] };
+export type Lembrete = { id: string; titulo: string; materia: string; trechos: Trecho[]; nextReviewAt?: string | null } & SrsState;
 export type Erro = { id: string; lembrete: string; materia: string; texto: string; dica: string };
 
 const toTrechos = (raw: unknown): Trecho[] =>
@@ -21,7 +24,14 @@ export function useLembretes() {
     queryFn: async (): Promise<Lembrete[]> => {
       const { data, error } = await supabase.from("lembretes").select("id,titulo,materia,trechos").order("created_at", { ascending: false });
       if (error) throw error;
-      return data.map((l) => ({ ...l, trechos: toTrechos(l.trechos) }));
+      const { data: reviews, error: reviewError } = await supabase.from("revisoes").select("lembrete_id,ease_factor,interval,repetitions,next_review_at");
+      if (reviewError) throw reviewError;
+      return data.map((l) => {
+        const review = reviews.find((r) => r.lembrete_id === l.id);
+        return { ...l, trechos: toTrechos(l.trechos), ...INITIAL_SRS,
+          ...(review ? { easeFactor: review.ease_factor, interval: review.interval, repetitions: review.repetitions, nextReviewAt: review.next_review_at } : {}),
+        };
+      });
     },
   });
 }
@@ -40,7 +50,7 @@ export function useErros() {
 export function useAddLembrete() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (l: Omit<Lembrete, "id">) => {
+    mutationFn: async (l: Pick<Lembrete, "titulo" | "materia" | "trechos">) => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Entre novamente para salvar seu lembrete.");
       const { error } = await supabase.from("lembretes").insert({
@@ -77,3 +87,11 @@ export function useRemoveErro() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
   });
 }
+
+export function useSaveReview() {
+  const qc = useQueryClient();
+  const save = useServerFn(saveReview);
+  return useMutation({
+    mutationFn: (data: Parameters<typeof saveReview>[0]["data"]) => save({ data }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["lembretes"] }),
+  });
