@@ -66,7 +66,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
     setTexto(v);
     setBlocos((prev) => {
       const next = revelarBlocos(prev, v);
-      if (next.some((b, i) => b.revelado && !prev[i].revelado)) setTimeout(() => setTexto(""), 400);
+      if (next.some((b, i) => b.revelado && !prev[i]?.revelado)) setTimeout(() => setTexto(""), 400);
       return next;
     });
   };
