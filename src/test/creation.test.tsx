@@ -7,6 +7,12 @@ vi.mock("@/lib/store", () => ({ useAddLembrete: () => ({ mutate }) }));
 vi.mock("@/components/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 import { Route } from "@/routes/_authenticated/criar";
 
+vi.stubGlobal("ResizeObserver", class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+});
+
 afterEach(() => { cleanup(); mutate.mockReset(); });
 const Creation = Route.options.component as ComponentType;
 
