@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
-import { useLembretes, useAddErros, revelarTrechos, type Lembrete, type Trecho } from "@/lib/store";
+import { useLembretes, useAddErros, revelarTrechos, type Lembrete } from "@/lib/store";
 import { revelarComDica } from "@/lib/recall";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
@@ -63,7 +63,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
     trechos: lembrete.trechos.map((t) => ({ ...t, revelado: false })),
     hintsUsed: 0,
   }));
-  const { trechos, hintsUsed } = study;
+  const { trechos } = study;
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
