@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/AppShell";
-import { useErros, removeErro } from "@/lib/store";
+import { useErros, useRemoveErro } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/erros")({
   head: () => ({
@@ -17,13 +17,15 @@ export const Route = createFileRoute("/_authenticated/erros")({
 });
 
 function Erros() {
-  const erros = useErros();
+  const { data: erros = [], isLoading } = useErros();
+  const remove = useRemoveErro();
   return (
     <AppShell>
       <h1 className="text-3xl font-extrabold text-navy">Caderno de Erros</h1>
       <p className="mt-1 text-muted-foreground">Tópicos que você não lembrou durante o estudo.</p>
       <ul className="mt-8 space-y-3">
-        {erros.length === 0 && <p className="rounded-2xl bg-card p-6 text-muted-foreground shadow-sm">Nenhum erro. Mandou bem!</p>}
+        {isLoading && <p className="text-muted-foreground">Carregando...</p>}
+        {!isLoading && erros.length === 0 && <p className="rounded-2xl bg-card p-6 text-muted-foreground shadow-sm">Nenhum erro. Mandou bem!</p>}
         {erros.map((e) => (
           <li key={e.id} className="flex items-start gap-4 rounded-2xl bg-card p-5 shadow-sm">
             <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" strokeWidth={1.75} />
@@ -34,7 +36,7 @@ function Erros() {
                 <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">{e.lembrete}</span>
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={() => removeErro(e.id)} className="rounded-2xl text-success">
+            <Button size="sm" variant="outline" onClick={() => remove.mutate(e.id)} className="rounded-2xl text-success">
               <Check strokeWidth={1.75} /> Aprendi
             </Button>
           </li>

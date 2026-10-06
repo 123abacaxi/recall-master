@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AppShell } from "@/components/AppShell";
-import { addLembrete, type Bloco } from "@/lib/store";
+import { useAddLembrete, type Bloco } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/criar")({
   head: () => ({
@@ -28,6 +28,7 @@ const mockGerado: Bloco[] = [
 
 function Criar() {
   const nav = useNavigate();
+  const add = useAddLembrete();
   const [texto, setTexto] = useState("");
   const [titulo, setTitulo] = useState("Hipertensão Arterial");
   const [materia, setMateria] = useState("Cardiologia");
@@ -74,7 +75,8 @@ function Criar() {
             ))}
           </ul>
           <Button
-            onClick={() => { addLembrete({ titulo, materia, blocos: preview }); toast.success("Nota salva!"); nav({ to: "/revisar" }); }}
+            disabled={add.isPending}
+            onClick={() => add.mutate({ titulo, materia, blocos: preview }, { onSuccess: () => { toast.success("Nota salva!"); nav({ to: "/revisar" }); }, onError: () => toast.error("Não foi possível salvar.") })}
             className="mt-6 h-12 rounded-2xl bg-success px-6 font-bold text-success-foreground shadow-sm hover:bg-success/90"
           >
             <Save strokeWidth={1.75} /> Salvar lembrete

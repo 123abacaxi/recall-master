@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/AppShell";
-import { useLembretes, revelarBlocos, addErros, type Lembrete, type Bloco } from "@/lib/store";
+import { useLembretes, useAddErros, revelarBlocos, type Lembrete, type Bloco } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/revisar")({
 });
 
 function Revisar() {
-  const lembretes = useLembretes();
+  const { data: lembretes = [], isLoading } = useLembretes();
   const [ativo, setAtivo] = useState<Lembrete | null>(null);
 
   return (
@@ -33,6 +33,7 @@ function Revisar() {
         <>
           <h1 className="text-3xl font-extrabold text-navy">Revisar</h1>
           <p className="mt-1 text-muted-foreground">Escolha um lembrete e teste sua memória.</p>
+          {isLoading && <p className="mt-8 text-muted-foreground">Carregando...</p>}
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {lembretes.map((l) => (
               <button
@@ -60,6 +61,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
+  const addErros = useAddErros();
   const revelados = blocos.filter((b) => b.revelado).length;
 
   const handle = (v: string) => {
@@ -88,7 +90,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
 
   const finalizar = () => {
     const faltou = blocos.filter((b) => !b.revelado);
-    if (faltou.length) addErros(lembrete, faltou);
+    if (faltou.length) addErros.mutate({ lembrete, blocos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
     toast.success(faltou.length ? `${faltou.length} tópico(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
     setBlocos((p) => p.map((b) => ({ ...b, revelado: true })));
   };
