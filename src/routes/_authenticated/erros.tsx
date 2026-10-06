@@ -7,6 +7,8 @@ import { useErros, useRemoveErro } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated/erros")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Caderno de Erros — OQ lembra" },
       { name: "description", content: "Tudo o que você esqueceu nas revisões, em um só lugar." },
       { property: "og:title", content: "Caderno de Erros — OQ lembra" },
