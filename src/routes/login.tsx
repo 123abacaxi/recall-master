@@ -35,15 +35,15 @@ function Login() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const p = schema.safeParse({ email, senha });
-    if (!p.success) return toast.error(p.error.issues[0]?.message);
+    if (!p.success) { toast.error(p.error.issues[0]?.message); return; }
     setLoading(true);
     const { data, error } =
       modo === "entrar"
         ? await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.senha })
         : await supabase.auth.signUp({ email: p.data.email, password: p.data.senha, options: { emailRedirectTo: `${window.location.origin}/revisar` } });
     setLoading(false);
-    if (error) return toast.error(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
-    if (!data.session) return toast.success("Conta criada! Confirme pelo link enviado ao seu e-mail.");
+    if (error) { toast.error(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message); return; }
+    if (!data.session) { toast.success("Conta criada! Confirme pelo link enviado ao seu e-mail."); return; }
     nav({ to: "/revisar" });
   };
 
