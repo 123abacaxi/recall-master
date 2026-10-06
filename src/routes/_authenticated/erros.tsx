@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/AppShell";
 import { useErros, removeErro } from "@/lib/store";
 
-export const Route = createFileRoute("/erros")({
+export const Route = createFileRoute("/_authenticated/erros")({
   head: () => ({
     meta: [
       { title: "Caderno de Erros — OQ lembra" },

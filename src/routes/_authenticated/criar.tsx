@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { AppShell } from "@/components/AppShell";
 import { addLembrete, type Bloco } from "@/lib/store";
 
-export const Route = createFileRoute("/criar")({
+export const Route = createFileRoute("/_authenticated/criar")({
   head: () => ({
     meta: [
       { title: "Criar nota — OQ lembra" },

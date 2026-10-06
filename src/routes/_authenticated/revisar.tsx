@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AppShell } from "@/components/AppShell";
 import { useLembretes, revelarBlocos, addErros, type Lembrete, type Bloco } from "@/lib/store";
 
-export const Route = createFileRoute("/revisar")({
+export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
     meta: [
       { title: "Revisar — OQ lembra" },
