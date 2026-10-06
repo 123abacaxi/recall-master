@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, cleanup } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode, ComponentType } from "react";
 
@@ -30,8 +30,7 @@ describe("draft approval", () => {
     fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
     expect(mutate).toHaveBeenCalledWith(expect.objectContaining({ titulo: "Diabetes revisado" }), expect.any(Object));
     const callbacks = mutate.mock.calls[0]?.[1];
-    callbacks.onSuccess();
-    callbacks.onSettled();
+    act(() => { callbacks.onSuccess(); callbacks.onSettled(); });
     await waitFor(() => expect(screen.queryByRole("button", { name: "Aprovar" })).not.toBeInTheDocument());
   });
   it("deletes a draft without publishing it", async () => {
