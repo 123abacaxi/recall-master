@@ -1,0 +1,160 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { ArrowLeft, ChevronRight, Lightbulb, Mic, CheckCircle2, Flag } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AppShell } from "@/components/AppShell";
+import { useLembretes, revelarBlocos, addErros, type Lembrete, type Bloco } from "@/lib/store";
+
+export const Route = createFileRoute("/revisar")({
+  head: () => ({
+    meta: [
+      { title: "Revisar — OQ lembra" },
+      { name: "description", content: "Modo estudo com active recall: digite o que lembra e revele a nota." },
+      { property: "og:title", content: "Revisar — OQ lembra" },
+      { property: "og:description", content: "Digite o que lembra e revele a nota." },
+    ],
+  }),
+  component: Revisar,
+});
+
+function Revisar() {
+  const lembretes = useLembretes();
+  const [ativo, setAtivo] = useState<Lembrete | null>(null);
+
+  return (
+    <AppShell>
+      {ativo ? (
+        <ModoEstudo key={ativo.id} lembrete={ativo} onVoltar={() => setAtivo(null)} />
+      ) : (
+        <>
+          <h1 className="text-3xl font-extrabold text-navy">Revisar</h1>
+          <p className="mt-1 text-muted-foreground">Escolha um lembrete e teste sua memória.</p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {lembretes.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setAtivo(l)}
+                className="group rounded-2xl bg-card p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
+                <h2 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h2>
+                <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{l.blocos.length} tópicos</span>
+                  <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </AppShell>
+  );
+}
+
+function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () => void }) {
+  const [blocos, setBlocos] = useState<Bloco[]>(() => lembrete.blocos.map((b) => ({ ...b, revelado: false })));
+  const [texto, setTexto] = useState("");
+  const [ouvindo, setOuvindo] = useState(false);
+  const recRef = useRef<any>(null);
+  const revelados = blocos.filter((b) => b.revelado).length;
+
+  const handle = (v: string) => {
+    setTexto(v);
+    setBlocos((prev) => {
+      const next = revelarBlocos(prev, v);
+      if (next.some((b, i) => b.revelado && !prev[i]?.revelado)) setTimeout(() => setTexto(""), 400);
+      return next;
+    });
+  };
+
+  const mic = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return toast.error("Seu navegador não suporta reconhecimento de voz.");
+    if (ouvindo) return recRef.current?.stop();
+    const rec = new SR();
+    rec.lang = "pt-BR";
+    rec.interimResults = true;
+    rec.continuous = true;
+    rec.onresult = (e: any) => handle(Array.from(e.results).map((r: any) => r[0].transcript).join(" "));
+    rec.onend = () => setOuvindo(false);
+    rec.start();
+    recRef.current = rec;
+    setOuvindo(true);
+  };
+
+  const finalizar = () => {
+    const faltou = blocos.filter((b) => !b.revelado);
+    if (faltou.length) addErros(lembrete, faltou);
+    toast.success(faltou.length ? `${faltou.length} tópico(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
+    setBlocos((p) => p.map((b) => ({ ...b, revelado: true })));
+  };
+
+  return (
+    <TooltipProvider delayDuration={100}>
+      <div className="pb-32">
+        <button onClick={onVoltar} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-navy">
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Voltar
+        </button>
+        <div className="mt-6 rounded-2xl bg-navy p-6 text-navy-foreground shadow-sm">
+          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{lembrete.materia}</span>
+          <h1 className="mt-3 text-2xl font-extrabold">{lembrete.titulo}</h1>
+          <div className="mt-4 flex items-center gap-3 text-sm">
+            <Progress value={(revelados / blocos.length) * 100} className="h-2 rounded-full bg-navy-foreground/20" />
+            <span className="shrink-0 font-semibold">{revelados}/{blocos.length}</span>
+          </div>
+        </div>
+
+        <ul className="mt-6 space-y-3">
+          {blocos.map((b) => (
+            <li key={b.texto} className={`flex items-center gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 transition-all duration-500 ${b.revelado ? "ring-success/40" : "ring-transparent"}`}>
+              {b.revelado ? (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-success" strokeWidth={1.75} />
+              ) : (
+                <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+              )}
+              <p className={`flex-1 font-semibold text-navy ${b.revelado ? "" : "blur-sm opacity-80 select-none transition-all duration-500"} transition-all duration-500`}>
+                {b.texto}
+              </p>
+              {!b.revelado && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="rounded-2xl p-2 text-muted-foreground hover:bg-muted hover:text-primary" aria-label="Ver dica">
+                      <Lightbulb className="h-5 w-5" strokeWidth={1.75} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="rounded-2xl">💡 {b.dica}</TooltipContent>
+                </Tooltip>
+              )}
+            </li>
+          ))}
+        </ul>
+        {revelados < blocos.length && (
+          <Button variant="ghost" onClick={finalizar} className="mt-4 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive">
+            <Flag strokeWidth={1.75} /> Desistir e enviar ao Caderno de Erros
+          </Button>
+        )}
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-20 pl-20 md:pl-64">
+        <div className="mx-auto max-w-4xl px-6 pb-6">
+          <div className="flex items-center gap-2 rounded-2xl border bg-card p-2 shadow-sm">
+            <Input
+              autoFocus
+              value={texto}
+              onChange={(e) => handle(e.target.value)}
+              placeholder="Digite o que você lembra..."
+              className="h-12 flex-1 rounded-2xl border-0 shadow-none focus-visible:ring-0"
+            />
+            <Button size="icon" onClick={mic} className={`h-12 w-12 rounded-2xl ${ouvindo ? "bg-destructive hover:bg-destructive/90" : ""}`} aria-label="Microfone">
+              <Mic strokeWidth={1.75} />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
