@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Mic, Flag, Eye } from "lucide-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronRight, Mic, Flag, Eye, Star, Clock, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
-import { useLembretes, useAddErros, revelarTrechos, type Lembrete } from "@/lib/store";
+import { useLembretes, useAddErros, useSaveReview, revelarTrechos, type Lembrete } from "@/lib/store";
 import { revelarComDica } from "@/lib/recall";
+import { calculateQualityScore } from "@/lib/srs";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
@@ -46,9 +47,10 @@ function Revisar() {
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
                 <h2 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h2>
                 <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{l.trechos.length} tópicos</span>
+                  <span>{l.trechos.length} trechos</span>
                   <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
                 </div>
+                {l.nextReviewAt && <p className="mt-3 text-xs text-primary">Próxima revisão: {new Date(l.nextReviewAt).toLocaleDateString("pt-BR")}</p>}
               </button>
             ))}
           </div>
@@ -63,20 +65,51 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
     trechos: lembrete.trechos.map((t) => ({ ...t, revelado: false })),
     hintsUsed: 0,
   }));
-  const { trechos } = study;
+  const { trechos, hintsUsed } = study;
+  const startTime = useRef<number | null>(null);
+  const abandoned = useRef(false);
+  const completed = useRef(false);
+  const sessionId = useRef<string | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [completion, setCompletion] = useState<{ quality: number; timeTaken: number; hintsUsed: number; abandoned: boolean } | null>(null);
+  const save = useSaveReview();
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
   const addErros = useAddErros();
   const revelados = trechos.filter((b) => b.revelado).length;
 
+  useEffect(() => {
+    startTime.current = performance.now();
+    sessionId.current = crypto.randomUUID();
+    return () => {
+      recRef.current?.stop();
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (completed.current || trechos.length === 0 || revelados !== trechos.length || startTime.current === null || !sessionId.current) return;
+    completed.current = true;
+    const timeTaken = Math.max(0, (performance.now() - startTime.current) / 1000);
+    const quality = abandoned.current ? 0 : calculateQualityScore(hintsUsed, trechos.length, timeTaken);
+    const result = { quality, timeTaken, hintsUsed, abandoned: abandoned.current };
+    setCompletion(result);
+    recRef.current?.stop();
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+    setTexto("");
+    save.mutate({ sessionId: sessionId.current, lembreteId: lembrete.id, timeTaken, hintsUsed, abandoned: abandoned.current });
+  }, [revelados, trechos.length, hintsUsed, lembrete.id, save.mutate]);
+
   const handle = (v: string) => {
+    if (completed.current) return;
     setTexto(v);
-    setStudy((prev) => {
-      const next = revelarTrechos(prev.trechos, v);
-      if (next.some((b, i) => b.revelado && !prev.trechos[i]?.revelado)) setTimeout(() => setTexto(""), 400);
-      return { ...prev, trechos: next };
-    });
+    const next = revelarTrechos(trechos, v);
+    if (next.some((b, i) => b.revelado && !trechos[i]?.revelado)) {
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+      clearTimer.current = setTimeout(() => setTexto(""), 400);
+    }
+    setStudy((prev) => ({ ...prev, trechos: revelarTrechos(prev.trechos, v) }));
   };
 
   const mic = () => {
@@ -95,6 +128,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
   };
 
   const finalizar = () => {
+    abandoned.current = true;
     const faltou = trechos.filter((b) => !b.revelado);
     if (faltou.length) addErros.mutate({ lembrete, trechos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
     toast.success(faltou.length ? `${faltou.length} trecho(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
@@ -111,7 +145,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{lembrete.materia}</span>
           <h1 className="mt-3 text-2xl font-extrabold">{lembrete.titulo}</h1>
           <div className="mt-4 flex items-center gap-3 text-sm">
-            <Progress value={(revelados / trechos.length) * 100} className="h-2 rounded-full bg-navy-foreground/20" />
+            <Progress value={trechos.length ? (revelados / trechos.length) * 100 : 0} className="h-2 rounded-full bg-navy-foreground/20" />
             <span className="shrink-0 font-semibold">{revelados}/{trechos.length}</span>
           </div>
         </div>
@@ -141,6 +175,24 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
             </Fragment>
           ))}
         </article>
+        {completion && (
+          <section aria-label="Conclusão da revisão" className="mt-6 rounded-2xl bg-card p-6 shadow-sm">
+            <h2 className="text-xl font-extrabold text-navy">A IA analisou sua fluência!</h2>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="flex gap-1 text-primary" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <Star key={i} className={`h-6 w-6 ${i < completion.quality ? "fill-current" : "text-muted-foreground/30"}`} strokeWidth={1.75} />)}</div>
+              <p className="font-bold text-navy">{completion.quality}/5 Estrelas</p>
+            </div>
+            <p className="mt-3 font-semibold text-navy">{["Não lembrado", "Apagão", "Difícil", "Bom", "Muito Bom", "Perfeito"][completion.quality]}</p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2"><Clock className="h-4 w-4" />Tempo gasto: {Math.ceil(completion.timeTaken)} s</span>
+              <span className="flex items-center gap-2"><Eye className="h-4 w-4" />Dicas utilizadas: {completion.hintsUsed}</span>
+            </div>
+            {save.isPending && <p role="status" className="mt-5 text-muted-foreground">Salvando agendamento...</p>}
+            {save.isSuccess && save.data && <p role="status" className="mt-5 flex items-center gap-2 font-semibold text-success"><CalendarDays className="h-5 w-5 shrink-0" />Próxima revisão agendada para daqui a {save.data.interval} dias</p>}
+            {save.isError && <div className="mt-5"><p role="alert" className="text-destructive">Não foi possível salvar o agendamento.</p><Button variant="outline" className="mt-3 rounded-2xl" onClick={() => { if (sessionId.current) save.mutate({ sessionId: sessionId.current, lembreteId: lembrete.id, timeTaken: completion.timeTaken, hintsUsed: completion.hintsUsed, abandoned: completion.abandoned }); }}>Tentar novamente</Button></div>}
+            <Button variant="outline" onClick={onVoltar} className="mt-5 rounded-2xl"><ArrowLeft />Voltar aos lembretes</Button>
+          </section>
+        )}
         {revelados < trechos.length && (
           <Button variant="ghost" onClick={finalizar} className="mt-4 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive">
             <Flag strokeWidth={1.75} /> Desistir e enviar ao Caderno de Erros
@@ -148,7 +200,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 pl-20 md:pl-64">
+      {!completion && <div className="fixed inset-x-0 bottom-0 z-20 pl-20 md:pl-64">
         <div className="mx-auto max-w-4xl px-6 pb-6">
           <div className="flex items-center gap-2 rounded-2xl border bg-card p-2 shadow-sm">
             <Input
@@ -163,7 +215,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
             </Button>
           </div>
         </div>
-      </div>
+      </div>}
     </>
   );
 }
