@@ -1,0 +1,1 @@
+ALTER TABLE public.lembretes RENAME COLUMN blocos TO trechos;
