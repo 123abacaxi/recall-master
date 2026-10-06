@@ -77,12 +77,106 @@ export type Database = {
         }
         Relationships: []
       }
+      revisoes: {
+        Row: {
+          created_at: string
+          ease_factor: number
+          hints_used: number | null
+          interval: number
+          lembrete_id: string
+          next_review_at: string | null
+          quality_score: number | null
+          repetitions: number
+          time_taken: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ease_factor?: number
+          hints_used?: number | null
+          interval?: number
+          lembrete_id: string
+          next_review_at?: string | null
+          quality_score?: number | null
+          repetitions?: number
+          time_taken?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ease_factor?: number
+          hints_used?: number | null
+          interval?: number
+          lembrete_id?: string
+          next_review_at?: string | null
+          quality_score?: number | null
+          repetitions?: number
+          time_taken?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revisoes_lembrete_id_fkey"
+            columns: ["lembrete_id"]
+            isOneToOne: false
+            referencedRelation: "lembretes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessoes_revisao: {
+        Row: {
+          created_at: string
+          id: string
+          lembrete_id: string
+          result: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          lembrete_id: string
+          result: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lembrete_id?: string
+          result?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessoes_revisao_lembrete_id_fkey"
+            columns: ["lembrete_id"]
+            isOneToOne: false
+            referencedRelation: "lembretes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      registrar_revisao: {
+        Args: {
+          p_hints: number
+          p_lembrete: string
+          p_quality: number
+          p_session: string
+          p_time: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
