@@ -1,4 +1,4 @@
-export type Bloco = { texto: string; keywords: string[]; dica: string; revelado: boolean };
+export type Trecho = { id: string; texto_original: string; keywords: string[]; revelado: boolean };
 
 /** Lowercase, strip accents and punctuation, collapse whitespace. */
 export function sanitizeText(text: string): string {
@@ -23,9 +23,9 @@ export function matchKeyword(input: string, keyword: string): boolean {
   return tokens.length > 0 && tokens.every((w) => t.includes(w));
 }
 
-export function revelarBlocos(blocos: Bloco[], digitado: string): Bloco[] {
-  if (!sanitizeText(digitado)) return blocos;
-  return blocos.map((b) =>
+export function revelarTrechos(trechos: Trecho[], digitado: string): Trecho[] {
+  if (!sanitizeText(digitado)) return trechos;
+  return trechos.map((b) =>
     b.revelado || !b.keywords.some((k) => matchKeyword(digitado, k)) ? b : { ...b, revelado: true },
   );
 }

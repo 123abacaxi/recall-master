@@ -1,20 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { revelarBlocos, sanitizeText, matchKeyword, type Bloco } from "./recall";
+import { revelarTrechos, sanitizeText, matchKeyword, type Trecho } from "./recall";
 
-const blocos: Bloco[] = [
-  { texto: "a", keywords: ["metformina"], dica: "", revelado: false },
-  { texto: "b", keywords: ["NYHA"], dica: "", revelado: false },
+const trechos: Trecho[] = [
+  { id: "1", texto_original: "A primeira escolha é a metformina, ", keywords: ["metformina"], revelado: false },
+  { id: "2", texto_original: "classificada pela NYHA.", keywords: ["NYHA"], revelado: false },
 ];
 
 describe("recall matching", () => {
   it("sanitizeText lowercases, strips accents and punctuation", () => {
     expect(sanitizeText("Coronária, Glicada.")).toBe("coronaria glicada");
   });
-  it("reveals only the block whose keyword is typed", () => {
-    expect(revelarBlocos(blocos, "acho que é Metformina!").map((x) => x.revelado)).toEqual([true, false]);
+  it("reveals only the trecho whose keyword is typed", () => {
+    expect(revelarTrechos(trechos, "acho que é Metformina!").map((x) => x.revelado)).toEqual([true, false]);
   });
-  it("keeps blocks hidden when no keyword matches", () => {
-    expect(revelarBlocos(blocos, "insulina").every((x) => !x.revelado)).toBe(true);
+  it("keeps trechos hidden when no keyword matches", () => {
+    expect(revelarTrechos(trechos, "insulina").every((x) => !x.revelado)).toBe(true);
   });
   it("matches accent/punctuation differences", () => {
     expect(matchKeyword("doenca coronaria", "coronária")).toBe(true);
