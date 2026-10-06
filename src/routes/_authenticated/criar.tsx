@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, Save, Lightbulb } from "lucide-react";
+import { Sparkles, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AppShell } from "@/components/AppShell";
-import { useAddLembrete, type Bloco } from "@/lib/store";
+import { useAddLembrete, type Trecho } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/criar")({
   head: () => ({
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/_authenticated/criar")({
   component: Criar,
 });
 
-const mockGerado: Bloco[] = [
-  { texto: "HAS: PA ≥ 140/90 mmHg em duas medidas", keywords: ["140"], dica: "Quatorze por nove", revelado: false },
-  { texto: "Primeira linha: tiazídicos, IECA/BRA ou BCC", keywords: ["tiazídico", "tiazidico"], dica: "Diurético", revelado: false },
-  { texto: "Meta pressórica geral: < 130/80 mmHg", keywords: ["130"], dica: "Treze por oito", revelado: false },
+const mockGerado: Trecho[] = [
+  { id: "t1", texto_original: "A hipertensão arterial é diagnosticada com PA de 140/90 mmHg ou mais em duas medidas. ", keywords: ["140"], revelado: false },
+  { id: "t2", texto_original: "Na primeira linha usamos tiazídicos, IECA/BRA ou bloqueadores de canal de cálcio.\n\n", keywords: ["tiazidico", "IECA"], revelado: false },
+  { id: "t3", texto_original: "A meta geral é manter a pressão abaixo de 130/80 mmHg.", keywords: ["130"], revelado: false },
 ];
 
 function Criar() {
@@ -32,7 +32,7 @@ function Criar() {
   const [texto, setTexto] = useState("");
   const [titulo, setTitulo] = useState("Hipertensão Arterial");
   const [materia, setMateria] = useState("Cardiologia");
-  const [preview, setPreview] = useState<Bloco[] | null>(null);
+  const [preview, setPreview] = useState<Trecho[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   const gerar = () => {
@@ -61,22 +61,19 @@ function Criar() {
             <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="h-11 rounded-2xl font-bold" />
             <Input value={materia} onChange={(e) => setMateria(e.target.value)} className="h-11 rounded-2xl" />
           </div>
-          <ul className="mt-6 space-y-3">
-            {preview.map((b) => (
-              <li key={b.texto} className="rounded-2xl border bg-background p-4">
-                <p className="font-semibold text-navy">• {b.texto}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  {b.keywords.map((k) => (
-                    <span key={k} className="rounded-full bg-primary/10 px-3 py-1 font-semibold text-primary">{k}</span>
-                  ))}
-                  <span className="flex items-center gap-1 text-muted-foreground"><Lightbulb className="h-3 w-3" /> {b.dica}</span>
-                </div>
-              </li>
+          <p className="mt-6 whitespace-pre-line rounded-2xl border bg-background p-6 text-lg leading-relaxed text-navy">
+            {preview.map((t) => (
+              <span key={t.id} className="rounded-md decoration-primary/40 decoration-2 underline-offset-4 hover:underline">{t.texto_original}</span>
             ))}
-          </ul>
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            {preview.flatMap((t) => t.keywords).map((k) => (
+              <span key={k} className="rounded-full bg-primary/10 px-3 py-1 font-semibold text-primary">{k}</span>
+            ))}
+          </div>
           <Button
             disabled={add.isPending}
-            onClick={() => add.mutate({ titulo, materia, blocos: preview }, { onSuccess: () => { toast.success("Nota salva!"); nav({ to: "/revisar" }); }, onError: () => toast.error("Não foi possível salvar.") })}
+            onClick={() => add.mutate({ titulo, materia, trechos: preview }, { onSuccess: () => { toast.success("Nota salva!"); nav({ to: "/revisar" }); }, onError: () => toast.error("Não foi possível salvar.") })}
             className="mt-6 h-12 rounded-2xl bg-success px-6 font-bold text-success-foreground shadow-sm hover:bg-success/90"
           >
             <Save strokeWidth={1.75} /> Salvar lembrete
