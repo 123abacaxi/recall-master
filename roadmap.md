@@ -1,4 +1,6 @@
 # Tela Criar
+- [ ] Aplicar identidade Estação de estudo em todas as telas, mantendo as funções atuais.
+- [ ] Conferir aparência, animações e regressões da nova identidade.
 - [x] Auto-SRS: cálculo, telemetria, agenda individual persistente e conclusão automática.
 - [x] Testar Auto-SRS e conclusão com dependências simuladas (19 testes passaram).
 - [ ] Verificar conclusão e gravação real no navegador: Supabase externo não fornece sessão autenticada para testes.
