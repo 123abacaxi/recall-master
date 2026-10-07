@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, ArrowUpRight, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -50,25 +50,27 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <form onSubmit={submit} className="w-full max-w-sm space-y-6 rounded-2xl border bg-card p-8 shadow-sm">
-        <div className="flex justify-center"><Logo /></div>
-        <div className="space-y-3">
+    <div className="login-page">
+      <form onSubmit={submit} className="login-panel w-full max-w-md space-y-8 rounded-2xl p-8 sm:p-12">
+        <Logo />
+        <div className="space-y-2"><p className="text-xs font-bold uppercase text-primary">Seu espaço de estudo</p><h1 className="text-3xl font-bold text-navy">{modo === "entrar" ? "Bom ter você aqui." : "Sua próxima conquista."}</h1></div>
+        <div className="space-y-5">
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" className="h-12 rounded-2xl pl-11 shadow-sm" />
+            <Input aria-label="E-mail" autoComplete="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" className="h-14 rounded-2xl pl-11" />
           </div>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.75} />
-            <Input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha" className="h-12 rounded-2xl pl-11 shadow-sm" />
+            <Input aria-label="Senha" autoComplete={modo === "entrar" ? "current-password" : "new-password"} type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha" className="h-14 rounded-2xl pl-11" />
           </div>
         </div>
-        <Button type="submit" disabled={loading} className="h-12 w-full rounded-2xl text-base font-bold shadow-sm">
+        <Button type="submit" disabled={loading} className="h-14 w-full rounded-2xl text-base font-bold">
           {loading ? "Aguarde..." : modo === "entrar" ? "Entrar" : "Criar conta"}
+          {loading ? <LoaderCircle className="motion-safe:animate-spin" /> : <ArrowUpRight />}
         </Button>
-        <button type="button" onClick={() => setModo(modo === "entrar" ? "cadastrar" : "entrar")} className="w-full text-sm font-semibold text-primary">
+        <Button variant="ghost" type="button" onClick={() => setModo(modo === "entrar" ? "cadastrar" : "entrar")} className="w-full text-sm font-semibold text-muted-foreground">
           {modo === "entrar" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
-        </button>
+        </Button>
       </form>
     </div>
   );

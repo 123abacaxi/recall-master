@@ -37,12 +37,12 @@ function Revisar() {
           <h1 className="text-3xl font-extrabold text-navy">Revisar</h1>
           <p className="mt-1 text-muted-foreground">Escolha um lembrete e teste sua memória.</p>
           {isLoading && <p className="mt-8 text-muted-foreground">Carregando...</p>}
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="reminder-grid mt-8 grid gap-6 sm:grid-cols-2">
             {lembretes.map((l) => (
-              <button
+              <Button variant="ghost"
                 key={l.id}
                 onClick={() => setAtivo(l)}
-                className="group rounded-2xl bg-card p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="reminder-tile group rounded-2xl bg-card p-6 text-left transition-all"
               >
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
                 <h2 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h2>
@@ -51,7 +51,7 @@ function Revisar() {
                   <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
                 </div>
                 {l.nextReviewAt && <p className="mt-3 text-xs text-primary">Próxima revisão: {new Date(l.nextReviewAt).toLocaleDateString("pt-BR")}</p>}
-              </button>
+              </Button>
             ))}
           </div>
         </>
@@ -137,24 +137,26 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
 
   return (
     <>
-      <div className="pb-32">
-        <button onClick={onVoltar} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-navy">
+      <div className="study-layout">
+        <Button variant="ghost" onClick={onVoltar} className="w-fit px-0 text-sm font-semibold text-muted-foreground hover:bg-transparent hover:text-navy">
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Voltar
-        </button>
-        <div className="mt-6 rounded-2xl bg-navy p-6 text-navy-foreground shadow-sm">
-          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{lembrete.materia}</span>
-          <h1 className="mt-3 text-2xl font-extrabold">{lembrete.titulo}</h1>
-          <div className="mt-4 flex items-center gap-3 text-sm">
-            <Progress value={trechos.length ? (revelados / trechos.length) * 100 : 0} className="h-2 rounded-full bg-navy-foreground/20" />
-            <span className="shrink-0 font-semibold">{revelados}/{trechos.length}</span>
+        </Button>
+        <header className="study-header">
+          <div className="min-w-0">
+          <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-navy">{lembrete.materia}</span>
+          <h1 className="mt-3 text-3xl font-bold text-navy">{lembrete.titulo}</h1>
           </div>
-        </div>
+          <div className="study-progress">
+            <Progress aria-label="Progresso da revisão" value={trechos.length ? (revelados / trechos.length) * 100 : 0} className="rounded-full" />
+            <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">{revelados}/{trechos.length}</p>
+          </div>
+        </header>
 
-        <article className="mt-6 rounded-2xl bg-card p-8 text-lg leading-relaxed text-navy shadow-sm md:p-10">
+        <article className="study-note bg-card text-navy">
           {trechos.map((t, index) => (
             <Fragment key={t.id}>
             <span
-              className={t.revelado ? "rounded-md transition-all duration-700" : "rounded-md bg-muted/50 text-transparent blur-[5px] select-none transition-all duration-700"}
+              className={t.revelado ? "recall-revealed rounded-2xl transition-all duration-700" : "rounded-2xl bg-muted/50 text-transparent blur-[5px] select-none transition-all duration-700"}
             >
               {t.texto_original.split("\n").map((linha, i) => (
                 <Fragment key={i}>{i > 0 && <br />}{linha}</Fragment>
@@ -167,7 +169,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
                 aria-label={`Revelar trecho ${index + 1}`}
                 title={`Revelar trecho ${index + 1}`}
                 onClick={() => setStudy((prev) => revelarComDica(prev, t.id))}
-                className="mx-1 inline-flex h-7 w-7 align-middle rounded-2xl text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                className="hint-eye mx-1 inline-flex h-7 w-7 align-middle rounded-2xl hover:text-navy"
               >
                 <Eye className="h-4 w-4" strokeWidth={1.75} />
               </Button>
@@ -176,7 +178,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
           ))}
         </article>
         {completion && (
-          <section aria-label="Conclusão da revisão" className="mt-6 rounded-2xl bg-card p-6 shadow-sm">
+          <section aria-label="Conclusão da revisão" className="completion-panel mt-6 rounded-2xl bg-card p-6">
             <h2 className="text-xl font-extrabold text-navy">A IA analisou sua fluência!</h2>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <div className="flex gap-1 text-primary" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <Star key={i} className={`h-6 w-6 ${i < completion.quality ? "fill-current" : "text-muted-foreground/30"}`} strokeWidth={1.75} />)}</div>
@@ -198,24 +200,21 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
             <Flag strokeWidth={1.75} /> Desistir e enviar ao Caderno de Erros
           </Button>
         )}
-      </div>
-
-      {!completion && <div className="fixed inset-x-0 bottom-0 z-20 pl-20 md:pl-64">
-        <div className="mx-auto max-w-4xl px-6 pb-6">
-          <div className="flex items-center gap-2 rounded-2xl border bg-card p-2 shadow-sm">
+      {!completion && <footer className="recall-dock">
             <Input
               autoFocus
               value={texto}
               onChange={(e) => handle(e.target.value)}
               placeholder="Digite o que você lembra..."
-              className="h-12 flex-1 rounded-2xl border-0 shadow-none focus-visible:ring-0"
+               aria-label="Digite o que você lembra"
+               className="flex-1 border border-input focus-visible:ring-1"
             />
-            <Button size="icon" onClick={mic} className={`h-12 w-12 rounded-2xl ${ouvindo ? "bg-destructive hover:bg-destructive/90" : ""}`} aria-label="Microfone">
+            <Button variant="ghost" size="icon" onClick={mic} className={`recall-mic ${ouvindo ? "is-listening" : ""}`} aria-label="Microfone" title={ouvindo ? "Parar microfone" : "Usar microfone"} aria-pressed={ouvindo}>
               <Mic strokeWidth={1.75} />
             </Button>
-          </div>
-        </div>
-      </div>}
+            <Button variant="navy" className="recall-confirm" onClick={() => handle(texto)}>Confirmar</Button>
+      </footer>}
+      </div>
     </>
   );
 }
