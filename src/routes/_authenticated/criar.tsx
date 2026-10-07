@@ -92,7 +92,7 @@ function Criar() {
       {drafts.length > 0 && (
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-bold text-navy">Aguardando aprovação</h2><span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">{drafts.length}</span></div>
-          <div className="space-y-4">
+           <div className="draft-list space-y-6">
             {drafts.map((draft) => <DraftCard key={draft.id} draft={draft} busy={approving !== null} approving={approving === draft.id} onApprove={() => approve(draft)} onDelete={() => setDrafts((prev) => prev.filter((item) => item.id !== draft.id))} onUpdate={(updated) => setDrafts((prev) => prev.map((item) => item.id === updated.id ? updated : item))} />)}
           </div>
         </section>

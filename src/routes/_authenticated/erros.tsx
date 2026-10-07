@@ -25,11 +25,11 @@ function Erros() {
     <AppShell>
       <h1 className="text-3xl font-extrabold text-navy">Caderno de Erros</h1>
       <p className="mt-1 text-muted-foreground">Tópicos que você não lembrou durante o estudo.</p>
-      <ul className="mt-8 space-y-3">
+      <ul className="error-list mt-8 space-y-6">
         {isLoading && <p className="text-muted-foreground">Carregando...</p>}
         {!isLoading && erros.length === 0 && <p className="rounded-2xl bg-card p-6 text-muted-foreground shadow-sm">Nenhum erro. Mandou bem!</p>}
         {erros.map((e) => (
-          <li key={e.id} className="flex items-start gap-4 rounded-2xl bg-card p-5 shadow-sm">
+          <li key={e.id} className="flex items-start gap-4 rounded-2xl border-l-2 border-l-destructive bg-card p-6">
             <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" strokeWidth={1.75} />
             <div className="flex-1">
               <p className="font-semibold text-navy">{e.texto}</p>
