@@ -28,7 +28,10 @@ it("keeps grades between 0 and 5 and handles empty notes", () => {
   expect(score(0, 0, 1)).toBe(0);
 });
 it("resets failed reviews to one day and zero repetitions", () => {
-  expect(next(2, 2.5, 15, 3)).toEqual({ easeFactor: 2.18, interval: 1, repetitions: 0 });
+  const result = next(2, 2.5, 15, 3);
+  expect(result.interval).toBe(1);
+  expect(result.repetitions).toBe(0);
+  expect(result.easeFactor).toBeCloseTo(2.18);
 });
 it("uses 1, 6 and rounded interval times current ease for successes", () => {
   expect(next(5, 2.5, 0, 0).interval).toBe(1);
