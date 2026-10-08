@@ -1,6 +1,9 @@
 # Tela Criar
 - [ ] Aplicar identidade Estação de estudo em todas as telas, mantendo as funções atuais.
 - [ ] Conferir aparência, animações e regressões da nova identidade.
+- [ ] Refatorar Caderno de Erros como ferramenta isolada de captura externa, com texto, áudio e OCR simulados.
+- [ ] Criar página individual do erro com mentor simulado e cópia para transformar em lembrete.
+- [ ] Remover o envio automático de erros pelas revisões e validar o fluxo isolado.
 - [x] Auto-SRS: cálculo, telemetria, agenda individual persistente e conclusão automática.
 - [x] Testar Auto-SRS e conclusão com dependências simuladas (19 testes passaram).
 - [ ] Verificar conclusão e gravação real no navegador: Supabase externo não fornece sessão autenticada para testes.
