@@ -16,32 +16,41 @@ export type Database = {
     Tables: {
       erros: {
         Row: {
+          analise_mentor: string | null
           created_at: string
           dica: string
           id: string
           lembrete: string
           materia: string
+          origem: string
           texto: string
+          texto_lembrete: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string
-          dica?: string
-          id?: string
-          lembrete: string
-          materia: string
-          texto: string
-          updated_at?: string
-          user_id?: string
-        }
-        Update: {
+          analise_mentor?: string | null
           created_at?: string
           dica?: string
           id?: string
           lembrete?: string
           materia?: string
+          origem?: string
+          texto: string
+          texto_lembrete?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          analise_mentor?: string | null
+          created_at?: string
+          dica?: string
+          id?: string
+          lembrete?: string
+          materia?: string
+          origem?: string
           texto?: string
+          texto_lembrete?: string | null
           updated_at?: string
           user_id?: string
         }

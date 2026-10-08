@@ -4,11 +4,12 @@ import type { Trecho } from "./recall";
 import { useServerFn } from "@tanstack/react-start";
 import { saveReview } from "./reviews.functions";
 import { INITIAL_SRS, type SrsState } from "./srs";
+import type { ErrorOrigin } from "./error-notebook";
 
 export { revelarTrechos, sanitizeText, type Trecho } from "./recall";
 
 export type Lembrete = { id: string; titulo: string; materia: string; trechos: Trecho[]; nextReviewAt?: string | null } & SrsState;
-export type Erro = { id: string; lembrete: string; materia: string; texto: string; dica: string };
+export type Erro = { id: string; texto: string; origem: ErrorOrigin; createdAt: string; analiseMentor?: string | null; textoLembrete?: string | null };
 
 const toTrechos = (raw: unknown): Trecho[] =>
   (Array.isArray(raw) ? raw : []).map((t: any, i: number) => ({
@@ -40,9 +41,9 @@ export function useErros() {
   return useQuery({
     queryKey: ["erros"],
     queryFn: async (): Promise<Erro[]> => {
-      const { data, error } = await supabase.from("erros").select("id,lembrete,materia,texto,dica").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("erros").select("id,texto,origem,created_at,analise_mentor,texto_lembrete").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data.map((row) => ({ id: row.id, texto: row.texto, origem: row.origem as ErrorOrigin, createdAt: row.created_at, analiseMentor: row.analise_mentor, textoLembrete: row.texto_lembrete }));
     },
   });
 }
@@ -65,12 +66,11 @@ export function useAddLembrete() {
   });
 }
 
-export function useAddErros() {
+export function useAddErro() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ lembrete, trechos }: { lembrete: Lembrete; trechos: Trecho[] }) => {
-      const rows = trechos.map((t) => ({ lembrete: lembrete.titulo, materia: lembrete.materia, texto: t.texto_original.trim(), dica: t.keywords.join(", ") }));
-      const { error } = await supabase.from("erros").upsert(rows, { onConflict: "user_id,texto", ignoreDuplicates: true });
+    mutationFn: async ({ texto, origem }: { texto: string; origem: Exclude<ErrorOrigin, "revisao_legada"> }) => {
+      const { error } = await supabase.from("erros").insert({ texto: texto.trim(), origem });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),

@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedCriarRouteImport } from './routes/_authenticated/criar'
 import { Route as AuthenticatedErrosRouteImport } from './routes/_authenticated/erros'
 import { Route as AuthenticatedRevisarRouteImport } from './routes/_authenticated/revisar'
+import { Route as AuthenticatedErrosErroIdRouteImport } from './routes/_authenticated/erros.$erroId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,20 +46,28 @@ const AuthenticatedRevisarRoute = AuthenticatedRevisarRouteImport.update({
   path: '/revisar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedErrosErroIdRoute =
+  AuthenticatedErrosErroIdRouteImport.update({
+    id: '/$erroId',
+    path: '/$erroId',
+    getParentRoute: () => AuthenticatedErrosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/criar': typeof AuthenticatedCriarRoute
-  '/erros': typeof AuthenticatedErrosRoute
+  '/erros': typeof AuthenticatedErrosRouteWithChildren
   '/revisar': typeof AuthenticatedRevisarRoute
+  '/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/criar': typeof AuthenticatedCriarRoute
-  '/erros': typeof AuthenticatedErrosRoute
+  '/erros': typeof AuthenticatedErrosRouteWithChildren
   '/revisar': typeof AuthenticatedRevisarRoute
+  '/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,14 +75,16 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/criar': typeof AuthenticatedCriarRoute
-  '/_authenticated/erros': typeof AuthenticatedErrosRoute
+  '/_authenticated/erros': typeof AuthenticatedErrosRouteWithChildren
   '/_authenticated/revisar': typeof AuthenticatedRevisarRoute
+  '/_authenticated/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/criar' | '/erros' | '/revisar'
+  fullPaths:
+    '/' | '/login' | '/criar' | '/erros' | '/revisar' | '/erros/$erroId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/criar' | '/erros' | '/revisar'
+  to: '/' | '/login' | '/criar' | '/erros' | '/revisar' | '/erros/$erroId'
   id:
     | '__root__'
     | '/'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '/_authenticated/criar'
     | '/_authenticated/erros'
     | '/_authenticated/revisar'
+    | '/_authenticated/erros/$erroId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -134,18 +146,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRevisarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/erros/$erroId': {
+      id: '/_authenticated/erros/$erroId'
+      path: '/$erroId'
+      fullPath: '/erros/$erroId'
+      preLoaderRoute: typeof AuthenticatedErrosErroIdRouteImport
+      parentRoute: typeof AuthenticatedErrosRoute
+    }
   }
 }
 
+interface AuthenticatedErrosRouteChildren {
+  AuthenticatedErrosErroIdRoute: typeof AuthenticatedErrosErroIdRoute
+}
+
+const AuthenticatedErrosRouteChildren: AuthenticatedErrosRouteChildren = {
+  AuthenticatedErrosErroIdRoute: AuthenticatedErrosErroIdRoute,
+}
+
+const AuthenticatedErrosRouteWithChildren =
+  AuthenticatedErrosRoute._addFileChildren(AuthenticatedErrosRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCriarRoute: typeof AuthenticatedCriarRoute
-  AuthenticatedErrosRoute: typeof AuthenticatedErrosRoute
+  AuthenticatedErrosRoute: typeof AuthenticatedErrosRouteWithChildren
   AuthenticatedRevisarRoute: typeof AuthenticatedRevisarRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCriarRoute: AuthenticatedCriarRoute,
-  AuthenticatedErrosRoute: AuthenticatedErrosRoute,
+  AuthenticatedErrosRoute: AuthenticatedErrosRouteWithChildren,
   AuthenticatedRevisarRoute: AuthenticatedRevisarRoute,
 }
 

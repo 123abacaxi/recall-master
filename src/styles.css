@@ -273,6 +273,18 @@
   .error-list > li > div { min-width: 0; }
   .login-panel { padding: 32px 24px; }
 }
+
+.capture-panel, .error-detail { box-shadow: var(--surface-shadow); border: 1px solid color-mix(in oklch, var(--surface-light) 55%, transparent); }
+.icon-well { display: grid; width: 44px; height: 44px; flex-shrink: 0; place-items: center; border-radius: 16px; color: var(--primary); background: var(--background); box-shadow: var(--control-shadow); }
+.icon-well svg { width: 20px; height: 20px; }
+.error-card { border-left: 3px solid var(--destructive); box-shadow: var(--surface-shadow); transition: transform 300ms cubic-bezier(.16,1,.3,1), box-shadow 300ms; }
+.error-card:hover { transform: translateY(-4px); box-shadow: var(--shell-shadow); }
+.error-index { display: grid; width: 42px; height: 42px; flex-shrink: 0; place-items: center; border-radius: 14px; background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); font-size: 12px; font-weight: 800; }
+.mentor-panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 650ms cubic-bezier(.16,1,.3,1), opacity 450ms; }
+.mentor-panel.is-open { grid-template-rows: 1fr; opacity: 1; }
+.mentor-panel-inner { min-height: 0; overflow: hidden; }
+.mentor-panel-inner > div { margin-top: 24px; transform: translateY(16px); transition: transform 650ms cubic-bezier(.16,1,.3,1); }
+.mentor-panel.is-open .mentor-panel-inner > div { transform: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
