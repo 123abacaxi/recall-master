@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
-import { useLembretes, useAddErros, useSaveReview, revelarTrechos, type Lembrete } from "@/lib/store";
+import { useLembretes, useSaveReview, revelarTrechos, type Lembrete } from "@/lib/store";
 import { revelarComDica } from "@/lib/recall";
 import { calculateQualityScore } from "@/lib/srs";
 
@@ -76,7 +76,6 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const recRef = useRef<any>(null);
-  const addErros = useAddErros();
   const revelados = trechos.filter((b) => b.revelado).length;
 
   useEffect(() => {
@@ -129,9 +128,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
 
   const finalizar = () => {
     abandoned.current = true;
-    const faltou = trechos.filter((b) => !b.revelado);
-    if (faltou.length) addErros.mutate({ lembrete, trechos: faltou }, { onError: () => toast.error("Não foi possível salvar no Caderno de Erros.") });
-    toast.success(faltou.length ? `${faltou.length} trecho(s) enviados ao Caderno de Erros` : "Tudo lembrado! 🎉");
+    toast.success("Revisão encerrada. Seu Caderno de Erros permanece separado.");
     setStudy((prev) => ({ ...prev, trechos: prev.trechos.map((b) => ({ ...b, revelado: true })) }));
   };
 
@@ -197,7 +194,7 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
         )}
         {revelados < trechos.length && (
           <Button variant="ghost" onClick={finalizar} className="mt-4 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive">
-            <Flag strokeWidth={1.75} /> Desistir e enviar ao Caderno de Erros
+            <Flag strokeWidth={1.75} /> Encerrar revisão
           </Button>
         )}
       {!completion && <footer className="recall-dock">

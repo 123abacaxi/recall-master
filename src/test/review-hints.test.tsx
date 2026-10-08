@@ -9,7 +9,6 @@ vi.mock("@/lib/store", async () => {
   const recall = await import("@/lib/recall");
   return {
     ...recall,
-    useAddErros: () => ({ mutate: vi.fn() }),
     useSaveReview: () => ({ mutate: save, isSuccess: true, data: { interval: 1 } }),
     useLembretes: () => ({ isLoading: false, data: [{ id: "note", titulo: "Diabetes", materia: "Medicina", trechos: [
       { id: "1", texto_original: "Metformina. ", keywords: ["metformina"], revelado: false },
@@ -41,9 +40,9 @@ it("stops at full reveal and submits telemetry exactly once", async () => {
   expect(screen.queryByPlaceholderText("Digite o que você lembra...")).not.toBeInTheDocument();
 });
 
-it("marks surrender as failure instead of awarding a perfect score", async () => {
+it("marks surrender as failure without sending content to the error notebook", async () => {
   render(<Review />);
   fireEvent.click(screen.getByRole("button", { name: /Diabetes/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Desistir e enviar ao Caderno de Erros" }));
+  fireEvent.click(screen.getByRole("button", { name: "Encerrar revisão" }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ abandoned: true })));
 });
