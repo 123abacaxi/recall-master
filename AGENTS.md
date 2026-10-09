@@ -15,3 +15,4 @@
 - Save completed review sessions through an authenticated server function and an atomic idempotent SQL operation so retries cannot advance repetitions twice.
 - Keep fluency scoring and SM-2 calculations in a pure module; automatic scores are heuristic, not validated neuroscience or an AI model response.
 - Keep the shared study-station shell, surface shadows and motion in semantic global tokens; presentation changes must not alter recall, approval or scheduling rules.
+- Keep external error capture and mentor mock generation separate from review completion so review telemetry never writes notebook entries.
