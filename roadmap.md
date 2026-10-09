@@ -4,6 +4,7 @@
 - [x] Refatorar Caderno de Erros como ferramenta isolada de captura externa, com texto, áudio e OCR simulados.
 - [x] Criar página individual do erro com mentor simulado e cópia para transformar em lembrete.
 - [x] Remover o envio automático de erros pelas revisões e validar o fluxo isolado.
+- [x] Ativar transcrição simultânea pelo microfone e extração rápida de texto por câmera/galeria, sem persistir os arquivos.
 - [x] Auto-SRS: cálculo, telemetria, agenda individual persistente e conclusão automática.
 - [x] Testar Auto-SRS e conclusão com dependências simuladas (19 testes passaram).
 - [ ] Verificar conclusão e gravação real no navegador: Supabase externo não fornece sessão autenticada para testes.
