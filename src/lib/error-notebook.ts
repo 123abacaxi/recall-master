@@ -1,3 +1,6 @@
+// Chave fictícia: a integração real do mentor será configurada depois. Enquanto for esta, a análise é simulada.
+export const MENTOR_API_KEY_PLACEHOLDER = "oq-mentor-chave-ficticia-0000";
+
 export type ErrorOrigin = "manual" | "audio" | "imagem" | "revisao_legada";
 
 export function createMentorAnalysis(rawText: string) {

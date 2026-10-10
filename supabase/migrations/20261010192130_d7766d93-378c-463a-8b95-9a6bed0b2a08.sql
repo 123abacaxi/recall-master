@@ -1,0 +1,1 @@
+ALTER TABLE public.erros ADD COLUMN IF NOT EXISTS titulo text NOT NULL DEFAULT '';
