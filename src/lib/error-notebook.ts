@@ -7,8 +7,3 @@ export function createMentorAnalysis(rawText: string) {
     reminderText: `Crie uma Carta Borrada sobre este erro: ${excerpt}. Destaque o conceito confundido, o critério que diferencia as alternativas e uma regra prática para não repetir o erro.`,
   };
 }
-
-export const captureExamples: Record<Exclude<ErrorOrigin, "manual" | "revisao_legada">, string> = {
-  audio: "Transcrição simulada: descreva aqui o raciocínio que levou ao erro e o ponto que gerou dúvida.",
-  imagem: "OCR simulado: revise o enunciado extraído da imagem e registre a alternativa que confundiu você.",
-};
