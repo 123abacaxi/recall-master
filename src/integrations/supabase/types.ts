@@ -25,6 +25,7 @@ export type Database = {
           origem: string
           texto: string
           texto_lembrete: string | null
+          titulo: string
           updated_at: string
           user_id: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           origem?: string
           texto: string
           texto_lembrete?: string | null
+          titulo?: string
           updated_at?: string
           user_id?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           origem?: string
           texto?: string
           texto_lembrete?: string | null
+          titulo?: string
           updated_at?: string
           user_id?: string
         }
