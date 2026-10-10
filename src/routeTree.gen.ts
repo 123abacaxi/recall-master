@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedCriarRouteImport } from './routes/_authenticated/criar'
 import { Route as AuthenticatedErrosRouteImport } from './routes/_authenticated/erros'
 import { Route as AuthenticatedRevisarRouteImport } from './routes/_authenticated/revisar'
+import { Route as AuthenticatedErrosIndexRouteImport } from './routes/_authenticated/erros.index'
 import { Route as AuthenticatedErrosErroIdRouteImport } from './routes/_authenticated/erros.$erroId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -46,6 +47,11 @@ const AuthenticatedRevisarRoute = AuthenticatedRevisarRouteImport.update({
   path: '/revisar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedErrosIndexRoute = AuthenticatedErrosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedErrosRoute,
+} as any)
 const AuthenticatedErrosErroIdRoute =
   AuthenticatedErrosErroIdRouteImport.update({
     id: '/$erroId',
@@ -60,14 +66,15 @@ export interface FileRoutesByFullPath {
   '/erros': typeof AuthenticatedErrosRouteWithChildren
   '/revisar': typeof AuthenticatedRevisarRoute
   '/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
+  '/erros/': typeof AuthenticatedErrosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/criar': typeof AuthenticatedCriarRoute
-  '/erros': typeof AuthenticatedErrosRouteWithChildren
   '/revisar': typeof AuthenticatedRevisarRoute
   '/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
+  '/erros': typeof AuthenticatedErrosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,13 +85,20 @@ export interface FileRoutesById {
   '/_authenticated/erros': typeof AuthenticatedErrosRouteWithChildren
   '/_authenticated/revisar': typeof AuthenticatedRevisarRoute
   '/_authenticated/erros/$erroId': typeof AuthenticatedErrosErroIdRoute
+  '/_authenticated/erros/': typeof AuthenticatedErrosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/criar' | '/erros' | '/revisar' | '/erros/$erroId'
+    | '/'
+    | '/login'
+    | '/criar'
+    | '/erros'
+    | '/revisar'
+    | '/erros/$erroId'
+    | '/erros/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/criar' | '/erros' | '/revisar' | '/erros/$erroId'
+  to: '/' | '/login' | '/criar' | '/revisar' | '/erros/$erroId' | '/erros'
   id:
     | '__root__'
     | '/'
@@ -94,6 +108,7 @@ export interface FileRouteTypes {
     | '/_authenticated/erros'
     | '/_authenticated/revisar'
     | '/_authenticated/erros/$erroId'
+    | '/_authenticated/erros/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -146,6 +161,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRevisarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/erros/': {
+      id: '/_authenticated/erros/'
+      path: '/'
+      fullPath: '/erros/'
+      preLoaderRoute: typeof AuthenticatedErrosIndexRouteImport
+      parentRoute: typeof AuthenticatedErrosRoute
+    }
     '/_authenticated/erros/$erroId': {
       id: '/_authenticated/erros/$erroId'
       path: '/$erroId'
@@ -158,10 +180,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedErrosRouteChildren {
   AuthenticatedErrosErroIdRoute: typeof AuthenticatedErrosErroIdRoute
+  AuthenticatedErrosIndexRoute: typeof AuthenticatedErrosIndexRoute
 }
 
 const AuthenticatedErrosRouteChildren: AuthenticatedErrosRouteChildren = {
   AuthenticatedErrosErroIdRoute: AuthenticatedErrosErroIdRoute,
+  AuthenticatedErrosIndexRoute: AuthenticatedErrosIndexRoute,
 }
 
 const AuthenticatedErrosRouteWithChildren =
