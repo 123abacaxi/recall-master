@@ -9,7 +9,7 @@ import type { ErrorOrigin } from "./error-notebook";
 export { revelarTrechos, sanitizeText, type Trecho } from "./recall";
 
 export type Lembrete = { id: string; titulo: string; materia: string; trechos: Trecho[]; nextReviewAt?: string | null } & SrsState;
-export type Erro = { id: string; texto: string; origem: ErrorOrigin; createdAt: string; analiseMentor?: string | null; textoLembrete?: string | null };
+export type Erro = { id: string; titulo: string; texto: string; origem: ErrorOrigin; createdAt: string; analiseMentor?: string | null; textoLembrete?: string | null };
 
 const toTrechos = (raw: unknown): Trecho[] =>
   (Array.isArray(raw) ? raw : []).map((t: any, i: number) => ({
@@ -41,9 +41,9 @@ export function useErros() {
   return useQuery({
     queryKey: ["erros"],
     queryFn: async (): Promise<Erro[]> => {
-      const { data, error } = await supabase.from("erros").select("id,texto,origem,created_at,analise_mentor,texto_lembrete").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("erros").select("id,titulo,texto,origem,created_at,analise_mentor,texto_lembrete").order("created_at", { ascending: false });
       if (error) throw error;
-      return data.map((row) => ({ id: row.id, texto: row.texto, origem: row.origem as ErrorOrigin, createdAt: row.created_at, analiseMentor: row.analise_mentor, textoLembrete: row.texto_lembrete }));
+      return data.map((row) => ({ id: row.id, titulo: row.titulo ?? "", texto: row.texto, origem: row.origem as ErrorOrigin, createdAt: row.created_at, analiseMentor: row.analise_mentor, textoLembrete: row.texto_lembrete }));
     },
   });
 }
@@ -71,6 +71,17 @@ export function useAddErro() {
   return useMutation({
     mutationFn: async ({ texto, origem }: { texto: string; origem: Exclude<ErrorOrigin, "revisao_legada"> }) => {
       const { error } = await supabase.from("erros").insert({ texto: texto.trim(), origem });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
+  });
+}
+
+export function useUpdateErro() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, titulo, texto }: { id: string; titulo: string; texto: string }) => {
+      const { error } = await supabase.from("erros").update({ titulo: titulo.trim().slice(0, 200), texto: texto.trim() } as never).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
