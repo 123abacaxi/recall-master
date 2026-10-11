@@ -3,17 +3,12 @@ import { z } from "https://esm.sh/zod@4.6.5";
 
 const functionName = "explain-error";
 const configuredOrigin = Deno.env.get("APP_ORIGIN");
-const allowedOrigins = new Set([...(configuredOrigin ? [configuredOrigin] : []), "http://localhost:3000", "http://localhost:5173"]);
 
-const corsHeaders = (request: Request): Record<string, string> => {
-  const requestOrigin = request.headers.get("origin");
-  return {
-    "Access-Control-Allow-Origin": requestOrigin && allowedOrigins.has(requestOrigin) ? requestOrigin : "null",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    Vary: "Origin",
-  };
-};
+const corsHeaders = (_request: Request): Record<string, string> => ({
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+});
 
 const inputSchema = z.object({ text: z.string().trim().min(1).max(20_000) });
 const responseSchema = z.object({ analysis: z.string().trim().min(1).max(20_000) });
@@ -39,7 +34,6 @@ function buildSystemPrompt() {
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(request) });
   if (request.method !== "POST") return jsonResponse(request, { error: "Método não permitido." }, 405);
-  if (corsHeaders(request)["Access-Control-Allow-Origin"] === "null") return jsonResponse(request, { error: "Origem não autorizada." }, 403);
 
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) return jsonResponse(request, { error: "Sessão necessária." }, 401);

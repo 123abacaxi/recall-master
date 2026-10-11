@@ -26,7 +26,19 @@ export function buildErrorExplanationSystemPrompt(): string {
 export async function explainError(text: string): Promise<ErrorExplanation> {
   const payload = errorExplanationPayloadSchema.parse({ text });
   const { data, error } = await supabase.functions.invoke<unknown>("explain-error", { body: payload });
-  if (error || !data) throw new Error("Não foi possível analisar este erro agora. Verifique sua sessão e tente novamente.");
+  if (error) {
+    let message = "Não foi possível analisar este erro agora. Verifique sua sessão e tente novamente.";
+    if ("context" in error && error.context instanceof Response) {
+      try {
+        const body = await error.context.clone().json() as { error?: unknown };
+        if (typeof body.error === "string" && body.error.trim()) message = body.error;
+      } catch {
+        // Keep the user-facing fallback when the function response is not JSON.
+      }
+    }
+    throw new Error(message);
+  }
+  if (!data) throw new Error("Não foi possível analisar este erro agora. Verifique sua sessão e tente novamente.");
   try {
     return errorExplanationResponseSchema.parse(data);
   } catch {
