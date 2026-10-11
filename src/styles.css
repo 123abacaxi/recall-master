@@ -228,7 +228,8 @@
 .hint-eye { box-shadow: var(--control-shadow); background: var(--background); color: var(--primary); }
 .hint-eye:hover { box-shadow: var(--inset-shadow); }
 .recall-dock { display: flex; align-items: center; gap: 24px; margin-top: 40px; position: sticky; bottom: 24px; z-index: 20; border-radius: 24px; background: color-mix(in oklch, var(--background) 92%, transparent); backdrop-filter: blur(16px); padding: 8px 0; }
-.recall-dock input { height: 64px; padding: 0 28px; min-width: 0; border-radius: 16px; }
+.recall-dock .focus-trail { height: 64px; min-width: 0; }
+.recall-dock .focus-trail > input { border: 0; border-radius: 0; box-shadow: none; }
 .recall-mic { width: 64px; height: 64px; border-radius: 999px; flex-shrink: 0; box-shadow: var(--mic-shadow); color: var(--primary); background: var(--background); }
 .recall-mic svg { width: 26px; height: 26px; }
 .recall-mic:hover { background: var(--background); box-shadow: var(--inset-shadow); }
@@ -266,7 +267,8 @@
   .study-progress { width: 100%; }
   .study-note { min-height: 360px; border-radius: 24px; padding: 24px 18px; font-size: 16px; }
   .recall-dock { display: grid; grid-template-columns: 48px minmax(0,1fr); gap: 12px; bottom: 8px; margin-top: 24px; }
-  .recall-dock input { grid-column: 1 / -1; height: 56px; padding: 0 18px; }
+  .recall-dock .focus-trail { grid-column: 1 / -1; height: 56px; }
+  .recall-dock .focus-trail > input { padding: 0 18px; }
   .recall-mic { width: 48px; height: 48px; }
   .recall-confirm { height: 48px; padding: 0 16px; }
   .error-list > li { flex-wrap: wrap; }

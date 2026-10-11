@@ -3,9 +3,9 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, Mic, Flag, Eye, Star, Clock, CalendarDays, Layers, CheckCircle2, SkipForward, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
+import { FocusTrail } from "@/components/FocusTrail";
 import { useLembretes, useSaveReview, revelarTrechos, type Lembrete } from "@/lib/store";
 import { revelarComDica } from "@/lib/recall";
 import { calculateQualityScore, buildDailyQueue, isDue, advanceQueue } from "@/lib/srs";
@@ -314,13 +314,12 @@ function ModoEstudo({ lembrete, onVoltar, fila }: { lembrete: Lembrete; onVoltar
           </Button>
         )}
       {!completion && <footer className="recall-dock">
-            <Input
+            <FocusTrail
               autoFocus
               value={texto}
-              onChange={(e) => handle(e.target.value)}
+              onChange={handle}
               placeholder="Digite o que você lembra..."
-               aria-label="Digite o que você lembra"
-               className="flex-1 border border-input focus-visible:ring-1"
+              aria-label="Digite o que você lembra"
             />
             <Button variant="ghost" size="icon" onClick={mic} className={`recall-mic ${ouvindo ? "is-listening" : ""}`} aria-label="Microfone" title={ouvindo ? "Parar microfone" : "Usar microfone"} aria-pressed={ouvindo}>
               <Mic strokeWidth={1.75} />
