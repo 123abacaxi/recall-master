@@ -43,6 +43,6 @@ it("stops at full reveal and submits telemetry exactly once", async () => {
 it("marks surrender as failure without sending content to the error notebook", async () => {
   render(<Review />);
   fireEvent.click(screen.getByRole("button", { name: /Diabetes/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Encerrar revisão" }));
+  fireEvent.click(screen.getByRole("button", { name: "Desistir" }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ abandoned: true })));
 });

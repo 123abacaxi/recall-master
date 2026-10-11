@@ -34,7 +34,6 @@ export const FocusTrail = forwardRef<HTMLInputElement, FocusTrailProps>(function
       )}
       style={{
         background: "var(--background)",
-        boxShadow: "var(--inset-shadow)",
         WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 45%, black 100%)",
         maskImage: "linear-gradient(to right, transparent 0%, black 45%, black 100%)",
       }}

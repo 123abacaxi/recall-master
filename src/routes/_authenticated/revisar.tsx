@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Mic, Flag, Eye, Star, Clock, CalendarDays, Layers, CheckCircle2, SkipForward, Play } from "lucide-react";
+import { ArrowLeft, ChevronRight, Mic, Eye, Star, Clock, CalendarDays, Layers, CheckCircle2, SkipForward, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -309,8 +309,12 @@ function ModoEstudo({ lembrete, onVoltar, fila }: { lembrete: Lembrete; onVoltar
           </section>
         )}
         {revelados < trechos.length && (
-          <Button variant="ghost" onClick={finalizar} className="mt-4 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive">
-            <Flag strokeWidth={1.75} /> Encerrar revisão
+          <Button
+            variant="outline"
+            onClick={finalizar}
+            className="mt-4 rounded-2xl border-destructive/30 bg-destructive/5 px-5 font-bold text-destructive shadow-sm transition-all hover:-translate-y-0.5 hover:border-destructive/50 hover:bg-destructive/10 hover:shadow-md"
+          >
+            Desistir
           </Button>
         )}
       {!completion && <footer className="recall-dock">
