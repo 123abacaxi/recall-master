@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AppShell } from "@/components/AppShell";
 import { useAddLembrete } from "@/lib/store";
-import { generateMockNotes, isDraftReady, type Draft, type GenerationPayload } from "@/lib/generation";
+import { generateNotes, isDraftReady, type Draft, type GenerationPayload } from "@/lib/generation";
 
 export const Route = createFileRoute("/_authenticated/criar")({
   head: () => ({ meta: [
@@ -37,7 +37,7 @@ function Criar() {
     setLoading(true);
     const payload: GenerationPayload = { text: texto, mode, granularity };
     try {
-      const generated = await generateMockNotes(payload);
+      const generated = await generateNotes(payload);
       setDrafts((prev) => [...prev, ...generated.map((draft) => ({ ...draft, id: crypto.randomUUID() }))]);
       toast.success("Rascunhos prontos para aprovação.");
     } catch (error) {
@@ -87,7 +87,7 @@ function Criar() {
           </div>
           <Button type="submit" disabled={loading || !texto.trim()} className="h-12 rounded-2xl px-5 font-bold shadow-sm"><Sparkles strokeWidth={1.75} className={loading ? "motion-safe:animate-pulse" : ""} />{loading ? "Gerando..." : "Gerar Nota Inteligente"}</Button>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground" role="status">Geração simulada · sem IA ou pesquisa web conectada.</p>
+        <p className="mt-3 text-xs text-muted-foreground" role="status">Geração com IA. Pesquisa Externa complementa pelo conhecimento do modelo, sem navegação web em tempo real. Todos os resultados são rascunhos e exigem sua aprovação.</p>
       </form>
       {drafts.length > 0 && (
         <section className="mt-10">

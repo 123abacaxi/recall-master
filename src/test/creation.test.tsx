@@ -2,8 +2,15 @@ import { act, fireEvent, render, screen, waitFor, cleanup } from "@testing-libra
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode, ComponentType } from "react";
 
-const { mutate } = vi.hoisted(() => ({ mutate: vi.fn() }));
+const { mutate, generateNotes } = vi.hoisted(() => ({
+  mutate: vi.fn(),
+  generateNotes: vi.fn(async () => [{ id: "draft-1", titulo: "Nota gerada", materia: "Medicina", trechos: [{ id: "t1", texto_original: "Metformina reduz a glicemia.", keywords: ["Metformina"], revelado: false }] }]),
+}));
 vi.mock("@/lib/store", () => ({ useAddLembrete: () => ({ mutate }) }));
+vi.mock("@/lib/generation", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/generation")>("@/lib/generation");
+  return { ...actual, generateNotes };
+});
 vi.mock("@/components/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 import { Route } from "@/routes/_authenticated/criar";
 

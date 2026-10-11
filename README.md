@@ -44,6 +44,10 @@ Lógica de Revelação: No onChange do input, varra as keywords dos blocos ocult
 
 This project was built with [Lovable](https://lovable.dev).
 
+## Geração de lembretes com IA
+
+A rota `supabase/functions/generate-notes` chama o OpenRouter exclusivamente no servidor. Configure o secret `OQlembra_IA_KEY` nos secrets do Supabase antes de usar a geração. O deploy da função deve ser feito pelo fluxo de Edge Functions do Supabase; nenhum valor do secret deve ser incluído no repositório.
+
 ## Build with Lovable
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/a019aabb-4ed4-429d-ad74-3c6ac0b6d92a).
