@@ -80,8 +80,13 @@ export function useAddErro() {
 export function useUpdateErro() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, titulo, texto }: { id: string; titulo: string; texto: string }) => {
-      const { error } = await supabase.from("erros").update({ titulo: titulo.trim().slice(0, 200), texto: texto.trim() } as never).eq("id", id);
+    mutationFn: async ({ id, titulo, texto, analiseMentor, textoLembrete }: { id: string; titulo: string; texto: string; analiseMentor?: string; textoLembrete?: string }) => {
+      const { error } = await supabase.from("erros").update({
+        titulo: titulo.trim().slice(0, 200),
+        texto: texto.trim(),
+        ...(analiseMentor !== undefined ? { analise_mentor: analiseMentor } : {}),
+        ...(textoLembrete !== undefined ? { texto_lembrete: textoLembrete } : {}),
+      } as never).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["erros"] }),
