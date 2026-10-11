@@ -14,7 +14,7 @@ const items = [
 export function Logo({ light = false }: { light?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <img src="/logo-oq-med.png" alt="OQ MED" className="h-12 w-12 rounded-2xl object-cover" />
+      <img src="/logo-oq-med.png" alt="OQ MED" className="h-12 w-12 object-contain" />
       <div className="leading-tight">
         <p className={`font-display text-lg font-bold ${light ? "text-navy-foreground" : "text-navy"}`}>OQ MED</p>
         <p className={`text-xs font-medium ${light ? "text-navy-foreground/60" : "text-muted-foreground"}`}>OQ lembra</p>
@@ -29,8 +29,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="station-page">
     <div className="station-shell">
       <aside className="station-sidebar">
-        <Link to="/revisar" aria-label="OQ MED — Revisar" className="brand-mark block h-10 w-10 overflow-hidden rounded-2xl">
-          <img src="/logo-oq-med.png" alt="OQ MED" className="h-full w-full object-cover" />
+        <Link to="/revisar" aria-label="OQ MED — Revisar" className="brand-mark block h-10 w-10">
+          <img src="/logo-oq-med.png" alt="OQ MED" className="h-full w-full object-contain" />
         </Link>
         <nav aria-label="Menu principal" className="mt-12 flex flex-1 flex-col gap-6">
           {items.map(({ to, label, icon: Icon }) => (
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Button></TooltipTrigger><TooltipContent side="right">Sair</TooltipContent></Tooltip>
       </aside>
       <main className="station-main">
-        <div className="station-brand"><img src="/logo-oq-med.png" alt="OQ MED" className="h-8 w-8 rounded-lg object-cover" /><span className="font-display font-bold text-navy">OQ MED</span><span className="text-muted-foreground">OQ lembra</span></div>
+        <div className="station-brand"><img src="/logo-oq-med.png" alt="OQ MED" className="h-8 w-8 object-contain" /><span className="font-display font-bold text-navy">OQ MED</span><span className="text-muted-foreground">OQ lembra</span></div>
         <div className="station-content">{children}</div>
       </main>
     </div>
