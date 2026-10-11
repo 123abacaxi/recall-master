@@ -17,6 +17,8 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Acesse o OQ lembra e continue suas revisões." },
       { property: "og:title", content: "Entrar — OQ lembra" },
       { property: "og:description", content: "Acesse o OQ lembra e continue suas revisões." },
+      { property: "og:image", content: "/logo-oq-med.png" },
+      { name: "twitter:image", content: "/logo-oq-med.png" },
     ],
   }),
   component: Login,

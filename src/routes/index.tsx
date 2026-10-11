@@ -12,6 +12,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Revise com active recall: notas mascaradas que se revelam quando você lembra." },
       { property: "og:title", content: "OQ lembra — Active Recall" },
       { property: "og:description", content: "Revise com active recall: notas que se revelam quando você lembra." },
+      { property: "og:image", content: "/logo-oq-med.png" },
+      { name: "twitter:image", content: "/logo-oq-med.png" },
     ],
   }),
 });

@@ -82,8 +82,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "OQ lembra" },
       { name: "description", content: "Active recall para estudantes de medicina." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo-oq-med.png" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:image", content: "/logo-oq-med.png" },
     ],
     links: [
       {
@@ -92,7 +93,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo-oq-med.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/logo-oq-med.png" },
     ],
   }),
   shellComponent: RootShell,
