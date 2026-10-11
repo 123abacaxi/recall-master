@@ -70,7 +70,7 @@ function Criar() {
         <Textarea
           aria-label={mode === "local" ? "Conteúdo de Matéria" : "Tema da pesquisa"}
           value={texto} onChange={(event) => setTexto(event.target.value)} disabled={loading}
-          placeholder={mode === "local" ? "Cole seu resumo ou texto aqui para a IA fragmentar..." : "Digite o que a IA deve pesquisar e estruturar (ex: Critérios de Duke para Endocardite)..."}
+          placeholder={mode === "local" ? "Cole seu resumo ou texto aqui para a IA fragmentar..." : "Escreva livremente o que você quer estudar, mesmo como um brainstorming..."}
           className={`mt-5 min-h-64 rounded-2xl border p-6 text-base shadow-sm transition-colors ${mode === "local" ? "bg-local-surface border-local-border" : "bg-search-surface border-search-border"}`}
         />
         <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -87,7 +87,7 @@ function Criar() {
           </div>
           <Button type="submit" disabled={loading || !texto.trim()} className="h-12 rounded-2xl px-5 font-bold shadow-sm"><Sparkles strokeWidth={1.75} className={loading ? "motion-safe:animate-pulse" : ""} />{loading ? "Gerando..." : "Gerar Nota Inteligente"}</Button>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground" role="status">Geração com IA. Pesquisa Externa complementa pelo conhecimento do modelo, sem navegação web em tempo real. Todos os resultados são rascunhos e exigem sua aprovação.</p>
+        <p className="mt-3 text-xs text-muted-foreground" role="status">{mode === "search" ? "Pesquisa Externa entende sua ideia como um brainstorming: interpreta, reorganiza e complementa o pedido com conhecimento médico, sem apenas repetir o texto e sem navegação web em tempo real." : "Conteúdo de Matéria organiza e fragmenta principalmente o que você escreveu, sem adicionar fatos externos desnecessários."} Todos os resultados são rascunhos e exigem sua aprovação.</p>
       </form>
       {drafts.length > 0 && (
         <section className="mt-10">

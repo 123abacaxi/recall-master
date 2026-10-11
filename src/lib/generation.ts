@@ -28,8 +28,8 @@ export type GenerationPayload = z.infer<typeof generationPayloadSchema>;
 export type Draft = { id: string; titulo: string; materia: string; trechos: Trecho[] };
 
 const modeInstructions = {
-  local: "Trate o texto recebido como fonte principal e completa. Organize, fragmente e condense sem adicionar fatos externos desnecessários; preserve a precisão e não invente lacunas.",
-  search: "Trate o texto como tema ou direcionamento. Complemente e corrija usando o conhecimento médico do modelo, priorizando diretrizes e literatura atualizadas. Não alegue consulta à internet, não invente referências ou fontes e sinalize incertezas de modo responsável quando relevante.",
+  local: "Modo Conteúdo de Matéria: trate o texto recebido como a fonte principal e completa. Organize, fragmente e condense o que foi escrito, preservando seu sentido e precisão. Não adicione fatos externos desnecessários nem preencha lacunas com invenções.",
+  search: "Modo Pesquisa Externa: o texto recebido é um brainstorming, uma intenção ou um ponto de partida, não uma lista de regras rígidas e nem uma fonte que precise ser copiada. Interprete o que a pessoa quis estudar, escolha a melhor estrutura didática, complemente os pontos importantes e corrija imprecisões usando o conhecimento médico do modelo. Escreva uma nota dinâmica, clara e substancialmente mais completa que uma paráfrase do texto. Você pode reorganizar, expandir e conectar ideias livremente para atender ao pedido. Não alegue consulta à internet em tempo real, não invente referências ou fontes e sinalize incertezas relevantes.",
 } as const;
 
 const granularityInstructions = {
@@ -79,7 +79,19 @@ export function parseModelJson(content: string): Draft[] {
 export async function generateNotes(payload: GenerationPayload): Promise<Draft[]> {
   const validPayload = generationPayloadSchema.parse(payload);
   const { data, error } = await supabase.functions.invoke<{ drafts: unknown }>("generate-notes", { body: validPayload });
-  if (error || !data) throw new Error("Não foi possível gerar os lembretes agora. Verifique sua sessão e tente novamente.");
+  if (error) {
+    let message = "Não foi possível gerar os lembretes agora. Verifique sua sessão e tente novamente.";
+    if ("context" in error && error.context instanceof Response) {
+      try {
+        const body = await error.context.clone().json() as { error?: unknown };
+        if (typeof body.error === "string" && body.error.trim()) message = body.error;
+      } catch {
+        // Keep the user-facing fallback when the function response is not JSON.
+      }
+    }
+    throw new Error(message);
+  }
+  if (!data) throw new Error("Não foi possível gerar os lembretes agora. Verifique sua sessão e tente novamente.");
   try {
     return parseAndNormalizeDrafts(data);
   } catch {

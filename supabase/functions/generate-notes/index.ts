@@ -3,17 +3,11 @@ import { z } from "https://esm.sh/zod@4.6.5";
 
 const functionName = "generate-notes";
 const origin = Deno.env.get("APP_ORIGIN");
-const allowedOrigins = new Set([...(origin ? [origin] : []), "http://localhost:3000", "http://localhost:5173"]);
-const requestOrigin = (request: Request) => request.headers.get("origin");
-const corsHeaders = (request: Request): Record<string, string> => {
-  const currentOrigin = requestOrigin(request);
-  return {
-    "Access-Control-Allow-Origin": currentOrigin && allowedOrigins.has(currentOrigin) ? currentOrigin : "null",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Vary": "Origin",
-  };
-};
+const corsHeaders = (_request: Request): Record<string, string> => ({
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+});
 
 const inputSchema = z.object({
   text: z.string().trim().min(1).max(20_000),
@@ -35,8 +29,8 @@ const responseSchema = z.object({ drafts: z.array(z.object({
 type Input = z.infer<typeof inputSchema>;
 
 const modeInstructions = {
-  local: "Trate o texto recebido como fonte principal e completa. Organize, fragmente e condense sem adicionar fatos externos desnecessários; preserve a precisão e não invente lacunas.",
-  search: "Trate o texto como tema ou direcionamento. Complemente e corrija usando o conhecimento médico do modelo, priorizando diretrizes e literatura atualizadas. Não alegue consulta à internet, não invente referências ou fontes e sinalize incertezas de modo responsável quando relevante.",
+  local: "Modo Conteúdo de Matéria: trate o texto recebido como a fonte principal e completa. Organize, fragmente e condense o que foi escrito, preservando seu sentido e precisão. Não adicione fatos externos desnecessários nem preencha lacunas com invenções.",
+  search: "Modo Pesquisa Externa: o texto recebido é um brainstorming, uma intenção ou um ponto de partida, não uma lista de regras rígidas e nem uma fonte que precise ser copiada. Interprete o que a pessoa quis estudar, escolha a melhor estrutura didática, complemente os pontos importantes e corrija imprecisões usando o conhecimento médico do modelo. Escreva uma nota dinâmica, clara e substancialmente mais completa que uma paráfrase do texto. Você pode reorganizar, expandir e conectar ideias livremente para atender ao pedido. Não alegue consulta à internet em tempo real, não invente referências ou fontes e sinalize incertezas relevantes.",
 } as const;
 const granularityInstructions = {
   auto: "Escolha entre agrupar trechos curtos e criar um lembrete único conforme a extensão e a complexidade do conteúdo.",
@@ -79,7 +73,6 @@ function jsonResponse(request: Request, body: unknown, status = 200) {
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(request) });
   if (request.method !== "POST") return jsonResponse(request, { error: "Método não permitido." }, 405);
-  if (corsHeaders(request)["Access-Control-Allow-Origin"] === "null") return jsonResponse(request, { error: "Origem não autorizada." }, 403);
 
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) return jsonResponse(request, { error: "Sessão necessária." }, 401);
