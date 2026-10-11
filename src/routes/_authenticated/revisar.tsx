@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Mic, Flag, Eye, Star, Clock, CalendarDays } from "lucide-react";
+import { ArrowLeft, ChevronRight, Mic, Flag, Eye, Star, Clock, CalendarDays, Layers, CheckCircle2, SkipForward, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { AppShell } from "@/components/AppShell";
 import { useLembretes, useSaveReview, revelarTrechos, type Lembrete } from "@/lib/store";
 import { revelarComDica } from "@/lib/recall";
-import { calculateQualityScore } from "@/lib/srs";
+import { calculateQualityScore, buildDailyQueue, isDue, advanceQueue } from "@/lib/srs";
 
 export const Route = createFileRoute("/_authenticated/revisar")({
   head: () => ({
@@ -29,6 +29,7 @@ function Revisar() {
   const [ativo, setAtivo] = useState<Lembrete | null>(null);
   const [fila, setFila] = useState<string[] | null>(null);
   const [deckOrder, setDeckOrder] = useState<string[]>([]);
+  const [rodada, setRodada] = useState(0);
 
   const vencidos = buildDailyQueue(lembretes);
   const vencidosIds = vencidos.map((l) => l.id).join(",");
@@ -43,11 +44,13 @@ function Revisar() {
     if (!deck.length) return;
     const ids = deck.map((l) => l.id);
     setFila(ids);
+    setRodada((r) => r + 1);
     setAtivo(byId.get(ids[0]) ?? null);
   };
   const proximo = (quality: number) => {
     const rest = advanceQueue(fila ?? [], quality);
     setFila(rest.length ? rest : null);
+    setRodada((r) => r + 1);
     setAtivo(rest.length ? byId.get(rest[0]) ?? null : null);
     if (!rest.length) toast.success("Fila do dia concluída!");
   };
@@ -57,7 +60,7 @@ function Revisar() {
     <AppShell>
       {ativo ? (
         <ModoEstudo
-          key={`${ativo.id}-${fila?.length ?? 0}-${Date.now()}`}
+          key={`${ativo.id}-${rodada}`}
           lembrete={ativo}
           onVoltar={sair}
           fila={fila ? { restantes: fila.length, onProximo: proximo } : undefined}
@@ -164,7 +167,7 @@ function venceuTexto(l: Lembrete) {
   return dias <= 0 ? "Vence hoje" : `Atrasado ${dias} ${dias === 1 ? "dia" : "dias"}`;
 }
 
-function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () => void }) {
+function ModoEstudo({ lembrete, onVoltar, fila }: { lembrete: Lembrete; onVoltar: () => void; fila?: { restantes: number; onProximo: (quality: number) => void } }) {
   const [study, setStudy] = useState(() => ({
     trechos: lembrete.trechos.map((t) => ({ ...t, revelado: false })),
     hintsUsed: 0,
@@ -291,9 +294,18 @@ function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () =
               <span className="flex items-center gap-2"><Eye className="h-4 w-4" />Dicas utilizadas: {completion.hintsUsed}</span>
             </div>
             {save.isPending && <p role="status" className="mt-5 text-muted-foreground">Salvando agendamento...</p>}
-            {save.isSuccess && save.data && <p role="status" className="mt-5 flex items-center gap-2 font-semibold text-success"><CalendarDays className="h-5 w-5 shrink-0" />Próxima revisão agendada para daqui a {save.data.interval} dias</p>}
+            {save.isSuccess && save.data && <p role="status" className="mt-5 flex items-center gap-2 font-semibold text-success"><CalendarDays className="h-5 w-5 shrink-0" />Próxima revisão agendada para daqui a {save.data.interval} {save.data.interval === 1 ? "dia" : "dias"} ({save.data.repetitions} {save.data.repetitions === 1 ? "repetição" : "repetições"}, facilidade {save.data.ease_factor.toFixed(2)})</p>}
             {save.isError && <div className="mt-5"><p role="alert" className="text-destructive">Não foi possível salvar o agendamento.</p><Button variant="outline" className="mt-3 rounded-2xl" onClick={() => { if (sessionId.current) save.mutate({ sessionId: sessionId.current, lembreteId: lembrete.id, timeTaken: completion.timeTaken, hintsUsed: completion.hintsUsed, abandoned: completion.abandoned }); }}>Tentar novamente</Button></div>}
-            <Button variant="outline" onClick={onVoltar} className="mt-5 rounded-2xl"><ArrowLeft />Voltar aos lembretes</Button>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button variant="outline" onClick={onVoltar} className="rounded-2xl"><ArrowLeft />{fila ? "Sair da fila" : "Voltar aos lembretes"}</Button>
+              {fila && (
+                <Button disabled={save.isPending} onClick={() => fila.onProximo(save.data?.quality_score ?? completion.quality)} className="rounded-2xl">
+                  {completion.quality < 3 ? "Voltará ao fim da fila · " : ""}
+                  {fila.restantes - (completion.quality < 3 ? 0 : 1) > 0 ? `Próximo (${fila.restantes - (completion.quality < 3 ? 0 : 1)} restantes)` : "Concluir fila"}
+                  <ChevronRight />
+                </Button>
+              )}
+            </div>
           </section>
         )}
         {revelados < trechos.length && (
