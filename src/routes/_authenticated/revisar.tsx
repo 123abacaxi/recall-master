@@ -45,13 +45,13 @@ function Revisar() {
     const ids = deck.map((l) => l.id);
     setFila(ids);
     setRodada((r) => r + 1);
-    setAtivo(byId.get(ids[0]) ?? null);
+    setAtivo(byId.get(ids[0]!) ?? null);
   };
   const proximo = (quality: number) => {
     const rest = advanceQueue(fila ?? [], quality);
     setFila(rest.length ? rest : null);
     setRodada((r) => r + 1);
-    setAtivo(rest.length ? byId.get(rest[0]) ?? null : null);
+    setAtivo(rest[0] ? byId.get(rest[0]) ?? null : null);
     if (!rest.length) toast.success("Fila do dia concluída!");
   };
   const sair = () => { setAtivo(null); setFila(null); };
@@ -93,7 +93,7 @@ function Revisar() {
               </div>
             )}
 
-            {deck.length === 1 && (
+            {deck.length === 1 && deck[0] && (
               <Button variant="ghost" onClick={iniciarFila} className="reminder-tile mt-6 h-auto w-full flex-col items-start rounded-2xl bg-card p-6 text-left">
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{deck[0].materia}</span>
                 <span className="mt-3 text-lg font-bold text-navy">{deck[0].titulo}</span>
@@ -126,7 +126,7 @@ function Revisar() {
                   })}
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
-                  <Button variant="outline" className="rounded-2xl" onClick={() => setDeckOrder((d) => [...d.slice(1), d[0]])}>
+                  <Button variant="outline" className="rounded-2xl" onClick={() => setDeckOrder((d) => (d.length ? [...d.slice(1), d[0]!] : d))}>
                     <SkipForward strokeWidth={1.75} /> Pular carta
                   </Button>
                   <Button className="rounded-2xl" onClick={iniciarFila}>
@@ -167,7 +167,7 @@ function venceuTexto(l: Lembrete) {
   return dias <= 0 ? "Vence hoje" : `Atrasado ${dias} ${dias === 1 ? "dia" : "dias"}`;
 }
 
-function ModoEstudo({ lembrete, onVoltar, fila }: { lembrete: Lembrete; onVoltar: () => void; fila?: { restantes: number; onProximo: (quality: number) => void } }) {
+function ModoEstudo({ lembrete, onVoltar, fila }: { lembrete: Lembrete; onVoltar: () => void; fila?: { restantes: number; onProximo: (quality: number) => void } | undefined }) {
   const [study, setStudy] = useState(() => ({
     trechos: lembrete.trechos.map((t) => ({ ...t, revelado: false })),
     hintsUsed: 0,
