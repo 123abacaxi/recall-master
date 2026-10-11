@@ -27,37 +27,141 @@ export const Route = createFileRoute("/_authenticated/revisar")({
 function Revisar() {
   const { data: lembretes = [], isLoading } = useLembretes();
   const [ativo, setAtivo] = useState<Lembrete | null>(null);
+  const [fila, setFila] = useState<string[] | null>(null);
+  const [deckOrder, setDeckOrder] = useState<string[]>([]);
+
+  const vencidos = buildDailyQueue(lembretes);
+  const vencidosIds = vencidos.map((l) => l.id).join(",");
+  useEffect(() => {
+    setDeckOrder(vencidosIds ? vencidosIds.split(",") : []);
+  }, [vencidosIds]);
+  const byId = new Map(lembretes.map((l) => [l.id, l]));
+  const deck = deckOrder.map((id) => byId.get(id)).filter(Boolean) as Lembrete[];
+  const emDia = lembretes.filter((l) => !isDue(l.nextReviewAt));
+
+  const iniciarFila = () => {
+    if (!deck.length) return;
+    const ids = deck.map((l) => l.id);
+    setFila(ids);
+    setAtivo(byId.get(ids[0]) ?? null);
+  };
+  const proximo = (quality: number) => {
+    const rest = advanceQueue(fila ?? [], quality);
+    setFila(rest.length ? rest : null);
+    setAtivo(rest.length ? byId.get(rest[0]) ?? null : null);
+    if (!rest.length) toast.success("Fila do dia concluída!");
+  };
+  const sair = () => { setAtivo(null); setFila(null); };
 
   return (
     <AppShell>
       {ativo ? (
-        <ModoEstudo key={ativo.id} lembrete={ativo} onVoltar={() => setAtivo(null)} />
+        <ModoEstudo
+          key={`${ativo.id}-${fila?.length ?? 0}-${Date.now()}`}
+          lembrete={ativo}
+          onVoltar={sair}
+          fila={fila ? { restantes: fila.length, onProximo: proximo } : undefined}
+        />
       ) : (
         <>
           <h1 className="text-3xl font-extrabold text-navy">Revisar</h1>
-          <p className="mt-1 text-muted-foreground">Escolha um lembrete e teste sua memória.</p>
+          <p className="mt-1 text-muted-foreground">Sua repetição espaçada decide o que voltar a ver hoje.</p>
           {isLoading && <p className="mt-8 text-muted-foreground">Carregando...</p>}
-          <div className="reminder-grid mt-8 grid gap-6 sm:grid-cols-2">
-            {lembretes.map((l) => (
-              <Button variant="ghost"
-                key={l.id}
-                onClick={() => setAtivo(l)}
-                className="reminder-tile group rounded-2xl bg-card p-6 text-left transition-all"
-              >
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
-                <h2 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h2>
-                <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{l.trechos.length} trechos</span>
-                  <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
-                </div>
-                {l.nextReviewAt && <p className="mt-3 text-xs text-primary">Próxima revisão: {new Date(l.nextReviewAt).toLocaleDateString("pt-BR")}</p>}
+
+          <section aria-label="Revisões do dia" className="mt-8 rounded-2xl border border-primary/20 bg-card p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-extrabold text-navy">
+                  <Layers className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                  {deck.length === 1 ? "Revisão do dia" : "Revisões do dia"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {deck.length ? `${deck.length} ${deck.length === 1 ? "lembrete vencido" : "lembretes vencidos"} na fila` : "Nada vencido. Volte amanhã!"}
+                </p>
+              </div>
+              {deck.length > 0 && (
+                <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">{deck.length} para hoje</span>
+              )}
+            </div>
+
+            {deck.length === 0 && !isLoading && (
+              <div className="mt-6 flex items-center gap-3 rounded-2xl bg-success/10 p-4 text-success">
+                <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} /> <span className="font-semibold">Tudo em dia.</span>
+              </div>
+            )}
+
+            {deck.length === 1 && (
+              <Button variant="ghost" onClick={iniciarFila} className="reminder-tile mt-6 h-auto w-full flex-col items-start rounded-2xl bg-card p-6 text-left">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{deck[0].materia}</span>
+                <span className="mt-3 text-lg font-bold text-navy">{deck[0].titulo}</span>
+                <span className="mt-2 text-xs text-destructive">{venceuTexto(deck[0])}</span>
               </Button>
-            ))}
-          </div>
+            )}
+
+            {deck.length > 1 && (
+              <div className="mt-6 flex flex-col items-center gap-6">
+                <div className="relative h-56 w-full max-w-md">
+                  {deck.slice(0, 4).reverse().map((l, ri, arr) => {
+                    const depth = arr.length - 1 - ri;
+                    const top = depth === 0;
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={top ? iniciarFila : undefined}
+                        tabIndex={top ? 0 : -1}
+                        aria-hidden={!top}
+                        className={`absolute inset-0 flex flex-col items-start rounded-2xl border border-border bg-card p-6 text-left shadow-sm transition-all duration-500 ${top ? "cursor-pointer hover:-translate-y-1 hover:shadow-md" : "pointer-events-none"}`}
+                        style={{ transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.05}) rotate(${depth % 2 ? -1.5 * depth : 1.5 * depth}deg)`, opacity: 1 - depth * 0.18, zIndex: 10 - depth }}
+                      >
+                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
+                        <span className="mt-4 text-xl font-bold text-navy">{l.titulo}</span>
+                        <span className="mt-2 text-sm text-muted-foreground">{l.trechos.length} trechos</span>
+                        <span className="mt-auto text-xs font-semibold text-destructive">{venceuTexto(l)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button variant="outline" className="rounded-2xl" onClick={() => setDeckOrder((d) => [...d.slice(1), d[0]])}>
+                    <SkipForward strokeWidth={1.75} /> Pular carta
+                  </Button>
+                  <Button className="rounded-2xl" onClick={iniciarFila}>
+                    <Play strokeWidth={1.75} /> Começar fila ({deck.length})
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {emDia.length > 0 && (
+            <>
+              <h2 className="mt-10 text-lg font-bold text-navy">Em dia</h2>
+              <div className="reminder-grid mt-4 grid gap-6 sm:grid-cols-2">
+                {emDia.map((l) => (
+                  <Button variant="ghost" key={l.id} onClick={() => setAtivo(l)} className="reminder-tile group rounded-2xl bg-card p-6 text-left transition-all">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{l.materia}</span>
+                    <h3 className="mt-4 text-lg font-bold text-navy">{l.titulo}</h3>
+                    <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{l.trechos.length} trechos</span>
+                      <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" strokeWidth={1.75} />
+                    </div>
+                    {l.nextReviewAt && <p className="mt-3 text-xs text-primary">Próxima revisão: {new Date(l.nextReviewAt).toLocaleDateString("pt-BR")}</p>}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </AppShell>
   );
+}
+
+function venceuTexto(l: Lembrete) {
+  if (!l.nextReviewAt) return "Nunca revisado";
+  const dias = Math.floor((Date.now() - new Date(l.nextReviewAt).getTime()) / 86400000);
+  return dias <= 0 ? "Vence hoje" : `Atrasado ${dias} ${dias === 1 ? "dia" : "dias"}`;
 }
 
 function ModoEstudo({ lembrete, onVoltar }: { lembrete: Lembrete; onVoltar: () => void }) {
